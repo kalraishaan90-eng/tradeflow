@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /settings
+Disallow: /admin
+
+Sitemap: https://tradeflow-13116.web.app/sitemap.xml

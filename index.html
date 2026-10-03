@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>TradeFlow — Advanced Trading Simulator & Financial Intelligence</title>
+    <meta name="description" content="Trade stocks, forex, crypto, F&O, banking comparisons and financial dictionary with ₹80,00,000 in virtual cash. Live market data, AI insights, Investopedia-grade education — zero real money.">
+    <meta name="theme-color" content="#0B0E0D">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TradeFlow">
+    <meta property="og:title" content="TradeFlow — Advanced Trading Simulator & Financial Intelligence">
+    <meta property="og:description" content="Paper-trade markets with live prices, rate comparisons, A-Z financial dictionary, and AI insights. No real money involved.">
+    <meta property="og:url" content="https://tradeflow-13116.web.app/">
+    <meta property="og:image" content="https://tradeflow-13116.web.app/favicon.svg">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="TradeFlow — Advanced Trading Simulator & Financial Intelligence">
+    <meta name="twitter:description" content="Paper-trade markets, explore banking yields, financial dictionary and AI insights. Zero real money.">
+    <meta name="twitter:image" content="https://tradeflow-13116.web.app/favicon.svg">
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Google Fonts: Syne, DM Sans, JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+    <style>
+      /* Pre-React loading fallback so first paint is on-brand */
+      html, body { margin: 0; background: #000; }
+      #root:empty::after {
+        content: "";
+        position: fixed; inset: 0;
+        background: radial-gradient(circle at 50% 45%, #367C5B 0%, transparent 60%),
+                    radial-gradient(circle at 50% 45%, rgba(93,211,148,.25) 0%, transparent 40%);
+        animation: boot-pulse 1.4s ease-in-out infinite;
+      }
+      @keyframes boot-pulse { 0%,100% { opacity: .25 } 50% { opacity: .7 } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    <noscript>
+      <div style="color:#F8FAFC;font-family:sans-serif;padding:40px;text-align:center;">
+        TradeFlow needs JavaScript enabled to run the trading simulator.
+      </div>
+    </noscript>
+    <script type="module" src="/src/main.jsx"></script>
+</body>
+</html>

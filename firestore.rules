@@ -1,0 +1,60 @@
+rules_version = '2';
+
+// StockShadow / TradeFlow — Firestore Security Rules
+// Deploy with: firebase deploy --only firestore:rules
+// (requires a firebase.json pointing at this file; see README)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Users collection: one document per authenticated user.
+    // - A signed-in user may read/create/update ONLY their own doc.
+    // - Deletes are never allowed from clients.
+    // - Admin flags (flagged) and cross-user reads (leaderboard/admin panel)
+    //   must go through a Cloud Function / Admin SDK, not the client.
+    match /users/{userId} {
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if false; // leaderboard/admin must use server-side aggregation
+      allow create, update: if isSignedIn()
+        && isOwner(userId)
+        && keepsImmutableFields()
+        && hasValidPortfolio();
+      allow delete: if false;
+
+      // Any future per-user subcollections (e.g. users/{id}/trades)
+      match /{document=**} {
+        allow read, write: if isSignedIn() && isOwner(userId);
+      }
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+  // The client may never grant itself admin/ban status.
+  function keepsImmutableFields() {
+    return (!('flagged' in request.resource.data) || request.resource.data.flagged == false)
+      && (!('role' in request.resource.data) || request.resource.data.role == 'user');
+  }
+
+  // Portfolio must stay within simulator limits (mirrors src/lib/tradingGuards.mjs).
+  function hasValidPortfolio() {
+    return !('portfolio' in request.resource.data)
+      || (
+        request.resource.data.portfolio.balance is number
+        && request.resource.data.portfolio.balance >= 0
+        && request.resource.data.portfolio.balance <= 20000000
+        && (!('positions' in request.resource.data.portfolio) || request.resource.data.portfolio.positions is list)
+        && (!('orderHistory' in request.resource.data.portfolio) || request.resource.data.portfolio.orderHistory is list)
+      );
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "TradeFlow — Advanced Trading Simulator",
+  "short_name": "TradeFlow",
+  "description": "Paper-trading simulator with live market data, F&O, mutual funds and AI insights. No real money.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0B0E0D",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
