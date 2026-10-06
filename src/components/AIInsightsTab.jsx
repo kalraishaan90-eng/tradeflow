@@ -88,6 +88,7 @@ function SentimentGauge({ value, size = 180 }) {
 // ─── Main AI Insights Tab Component ──────────────────────────────────────────
 export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAssetSymbol }) {
   const [chatInput, setChatInput] = useState('');
+  const [activeModel, setActiveModel] = useState('Gemini 3.5 Flash');
   const [chatHistory, setChatHistory] = useState([
     { role: 'ai', content: "Hello! I'm your TradeFlow AI assistant, powered by Gemini. Ask me about markets, trading strategies, financial concepts, or rate comparisons." }
   ]);
@@ -106,8 +107,9 @@ export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAsse
     setChatInput('');
     setIsTyping(true);
     try {
-      const { generateAIReply } = await import('../lib/aiChat');
+      const { generateAIReply, getActiveModelName } = await import('../lib/aiChat');
       const aiResponse = await generateAIReply(priorHistory, userMsg);
+      setActiveModel(getActiveModelName());
       setChatHistory(prev => [...prev, { role: 'ai', content: aiResponse }]);
     } catch (error) {
       console.error('Gemini request failed:', error);
@@ -159,7 +161,7 @@ export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAsse
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ color: 'var(--color-text-secondary)' }}>Model</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#fff' }}>Gemini 3.8 Flash</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#fff' }}>{activeModel}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ color: 'var(--color-text-secondary)' }}>Connection</span>

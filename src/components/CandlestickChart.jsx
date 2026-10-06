@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { createChart, CandlestickSeries } from 'lightweight-charts';
 
-export default function TradingViewCandleChart({ data }) {
+export default function CandlestickChart({ data }) {
   const containerRef = useRef(null);
   const chartRef = useRef(null);
 
@@ -15,6 +15,7 @@ export default function TradingViewCandleChart({ data }) {
       layout: {
         background: { type: 'solid', color: 'transparent' },
         textColor: 'rgba(255,255,255,0.45)',
+        attributionLogo: false,
       },
       grid: {
         vertLines: { color: 'rgba(255,255,255,0.04)' },

@@ -2730,3 +2730,17 @@ a:focus-visible {
   border-color: var(--color-border-glow);
   box-shadow: 0 0 18px rgba(93, 211, 148, 0.08);
 }
+
+/* Ensure TradingView attribution watermark/logo and links are completely hidden */
+#tv-attr-logo,
+a#tv-attr-logo,
+.tradingview-widget-container,
+a[href*="tradingview.com"] {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}

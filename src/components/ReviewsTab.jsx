@@ -29,7 +29,7 @@ const REVIEWS_DATA = [
     fees: '₹0 Commission (Simulated ₹80L Cash)',
     pros: [
       '₹80,00,000 risk-free virtual practice capital with realistic price walk fallback',
-      'Advanced TradingView candlestick charts with technical indicators',
+      'Interactive real-time candlestick charts with technical indicators',
       'Integrated F&O derivatives chain with call/put strike analysis',
       'Instant AI market insights powered by Google Gemini'
     ],

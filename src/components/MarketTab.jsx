@@ -3,8 +3,7 @@ import { Search, TrendingUp, TrendingDown, Activity, ChevronDown, ChevronUp, Loa
 import { ResponsiveContainer, AreaChart, Area, YAxis } from 'recharts';
 import { fetchYahooQuotes, fetchYahooChart, formatVolume } from '../lib/marketData.js';
 
-const TradingViewWidget = lazy(() => import('./TradingViewWidget.jsx'));
-const TradingViewCandleChart = lazy(() => import('./TradingViewCandleChart.jsx'));
+const CandlestickChart = lazy(() => import('./CandlestickChart.jsx'));
 
 // Market assets config
 const MARKET_ASSETS_CONFIG = {
@@ -85,7 +84,6 @@ export default function MarketTab({
   const [tickChanges, setTickChanges] = useState({}); // symbol -> 'up' or 'down'
 
   // Expandable Mini Chart state
-  const [chartMode, setChartMode] = useState({}); // symbol -> 'overview' | 'candles'
   const [historicalData, setHistoricalData] = useState({}); // symbol -> array of prices
   const [loadingCharts, setLoadingCharts] = useState({}); // symbol -> bool
 
@@ -471,8 +469,6 @@ export default function MarketTab({
               // Limit trading to configured simulator assets (Indian stocks, crypto, forex)
               const simSymbol = mapToSimSymbol(asset.symbol);
               const canTrade = true; // All listed assets are tradeable in the simulator
-              const isIndianStock = asset.symbol.endsWith('.NS') || asset.symbol.endsWith('.BO');
-              const activeMode = chartMode[asset.symbol] || (isIndianStock ? 'candles' : 'overview');
 
               return (
                 <div 
@@ -521,64 +517,25 @@ export default function MarketTab({
                             </span>
                           </div>
 
-                          {/* Chart Mode Controls + Trade Action Buttons */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.04)', padding: '3px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setChartMode(prev => ({ ...prev, [asset.symbol]: 'overview' })); }}
-                                style={{
-                                  padding: '5px 12px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '700',
-                                  borderRadius: '4px',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  background: activeMode === 'overview' ? 'var(--color-teal)' : 'transparent',
-                                  color: activeMode === 'overview' ? '#000' : 'var(--color-text-secondary)',
-                                  transition: 'all 0.15s ease'
-                                }}
+                          {/* Trade Action Buttons */}
+                          {canTrade ? (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <button 
+                                className="m-action-btn buy" 
+                                onClick={(e) => { e.stopPropagation(); handleOpenTradeModal(asset.symbol, 'BUY'); }}
+                                style={{ width: '80px', padding: '6px 12px' }}
                               >
-                                TradingView
+                                BUY
                               </button>
-                              <button
-                                type="button"
-                                onClick={(e) => { e.stopPropagation(); setChartMode(prev => ({ ...prev, [asset.symbol]: 'candles' })); }}
-                                style={{
-                                  padding: '5px 12px',
-                                  fontSize: '0.75rem',
-                                  fontWeight: '700',
-                                  borderRadius: '4px',
-                                  border: 'none',
-                                  cursor: 'pointer',
-                                  background: activeMode === 'candles' ? 'var(--color-teal)' : 'transparent',
-                                  color: activeMode === 'candles' ? '#000' : 'var(--color-text-secondary)',
-                                  transition: 'all 0.15s ease'
-                                }}
+                              <button 
+                                className="m-action-btn buy" 
+                                onClick={(e) => { e.stopPropagation(); handleOpenTradeModal(asset.symbol, 'SELL'); }}
+                                style={{ width: '80px', padding: '6px 12px', background: 'linear-gradient(135deg, var(--color-red), #b91c1c)', color: '#fff', boxShadow: '0 4px 10px var(--color-red-glow)' }}
                               >
-                                Candlesticks
+                                SELL
                               </button>
                             </div>
-
-                            {canTrade ? (
-                              <div style={{ display: 'flex', gap: '8px' }}>
-                                <button 
-                                  className="m-action-btn buy" 
-                                  onClick={(e) => { e.stopPropagation(); handleOpenTradeModal(asset.symbol, 'BUY'); }}
-                                  style={{ width: '80px', padding: '6px 12px' }}
-                                >
-                                  BUY
-                                </button>
-                                <button 
-                                  className="m-action-btn buy" 
-                                  onClick={(e) => { e.stopPropagation(); handleOpenTradeModal(asset.symbol, 'SELL'); }}
-                                  style={{ width: '80px', padding: '6px 12px', background: 'linear-gradient(135deg, var(--color-red), #b91c1c)', color: '#fff', boxShadow: '0 4px 10px var(--color-red-glow)' }}
-                                >
-                                  SELL
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
+                          ) : null}
                         </div>
 
                         {/* Stats items */}
@@ -607,37 +564,22 @@ export default function MarketTab({
                       </div>
 
                       {/* Sparkline / Chart Canvas Wrapper */}
-                      <div className="mini-chart-canvas-wrapper" style={{ minHeight: '380px', marginTop: '6px' }}>
-                        {(() => {
-                          const isIndianStock = asset.symbol.endsWith('.NS') || asset.symbol.endsWith('.BO');
-                          const activeMode = chartMode[asset.symbol] || (isIndianStock ? 'candles' : 'overview');
-
-                          if (activeMode === 'overview') {
-                            return (
-                              <Suspense fallback={<div style={{ display: 'grid', placeItems: 'center', height: '380px', color: 'var(--color-text-muted)' }}>Loading TradingView Chart…</div>}>
-                                <TradingViewWidget symbol={asset.symbol} title={asset.name} assetType={marketFilter} height={380} />
-                              </Suspense>
-                            );
-                          }
-
-                          return (
-                            <div style={{ height: '340px', width: '100%', borderRadius: '8px', overflow: 'hidden', background: 'rgba(11, 15, 25, 0.4)', border: '1px solid rgba(255,255,255,0.06)', position: 'relative', padding: '10px' }}>
-                              {chartData.length > 0 ? (
-                                <Suspense fallback={<div style={{ display: 'grid', placeItems: 'center', height: '320px', color: 'var(--color-text-muted)' }}>Preparing chart…</div>}>
-                                  <TradingViewCandleChart data={chartData} />
-                                </Suspense>
-                              ) : isLoadingChart ? (
-                                <div style={{ display: 'grid', placeItems: 'center', height: '320px', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
-                                  <Loader size={18} className="fa-spin" style={{ color: 'var(--color-teal)' }} /> Loading live candlestick history…
-                                </div>
-                              ) : (
-                                <div style={{ display: 'grid', placeItems: 'center', height: '320px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
-                                  Unable to load live quotes history.
-                                </div>
-                              )}
+                      <div className="mini-chart-canvas-wrapper" style={{ minHeight: '340px', marginTop: '6px' }}>
+                        <div style={{ height: '340px', width: '100%', borderRadius: '8px', overflow: 'hidden', background: 'rgba(11, 15, 25, 0.4)', border: '1px solid rgba(255,255,255,0.06)', position: 'relative', padding: '10px' }}>
+                          {chartData.length > 0 ? (
+                            <Suspense fallback={<div style={{ display: 'grid', placeItems: 'center', height: '320px', color: 'var(--color-text-muted)' }}>Preparing chart…</div>}>
+                              <CandlestickChart data={chartData} />
+                            </Suspense>
+                          ) : isLoadingChart ? (
+                            <div style={{ display: 'grid', placeItems: 'center', height: '320px', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                              <Loader size={18} className="fa-spin" style={{ color: 'var(--color-teal)' }} /> Loading live candlestick history…
                             </div>
-                          );
-                        })()}
+                          ) : (
+                            <div style={{ display: 'grid', placeItems: 'center', height: '320px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                              Unable to load live quotes history.
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

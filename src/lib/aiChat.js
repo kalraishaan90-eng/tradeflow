@@ -2,6 +2,26 @@ const SYSTEM_INSTRUCTION = 'You are TradeFlow AI, an advanced financial intellig
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
 
+// Fallback priority: if a model encounters high demand (503) or rate limits, seamlessly try the next one
+const CANDIDATE_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-flash-lite-latest',
+  'gemini-3.1-flash-lite',
+  'gemini-3.8-flash'
+];
+
+let currentActiveModel = 'gemini-3.5-flash';
+
+export function getActiveModelName() {
+  switch (currentActiveModel) {
+    case 'gemini-3.5-flash': return 'Gemini 3.5 Flash';
+    case 'gemini-flash-lite-latest': return 'Gemini Flash-Lite';
+    case 'gemini-3.1-flash-lite': return 'Gemini 3.1 Flash-Lite';
+    case 'gemini-3.8-flash': return 'Gemini 3.8 Flash';
+    default: return 'Gemini Flash';
+  }
+}
+
 export async function generateAIReply(history = [], userMessage = '') {
   if (!GEMINI_API_KEY) {
     throw new Error('Gemini API key is not configured.');
@@ -49,28 +69,40 @@ export async function generateAIReply(history = [], userMessage = '') {
     }
   };
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
+  let lastErrorMessage = '';
+
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        const message = errData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
+        lastErrorMessage = message;
+        console.warn(`Gemini model ${model} failed (${response.status}): ${message}. Trying next fallback model...`);
+        continue;
+      }
+
+      const data = await response.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text && text.trim()) {
+        currentActiveModel = model;
+        return text;
+      }
+    } catch (err) {
+      console.warn(`Gemini model ${model} request error: ${err.message}. Trying next fallback model...`);
+      lastErrorMessage = err.message;
     }
-  );
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    const message = errData?.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-    throw new Error(`Gemini API error: ${message}`);
   }
 
-  const data = await response.json();
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text || !text.trim()) {
-    throw new Error('The AI model returned an empty response. Please try again.');
-  }
-
-  return text;
+  throw new Error(`Gemini API error: ${lastErrorMessage || 'Service temporarily unavailable. Please try again.'}`);
 }
