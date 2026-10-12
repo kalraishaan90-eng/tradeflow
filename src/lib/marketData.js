@@ -63,6 +63,20 @@ const YAHOO_MAP = {
   'HINDUNILVR.NS': 'HINDUNILVR.NS',
   'ITC.NS': 'ITC.NS',
   'SBIN.NS': 'SBIN.NS',
+  'BHARTIARTL.NS': 'BHARTIARTL.NS',
+  'LT.NS': 'LT.NS',
+  'TATAMOTORS.NS': 'TATAMOTORS.NS',
+  'SUNPHARMA.NS': 'SUNPHARMA.NS',
+  'BAJFINANCE.NS': 'BAJFINANCE.NS',
+  'ASIANPAINT.NS': 'ASIANPAINT.NS',
+  'MARUTI.NS': 'MARUTI.NS',
+  'TITAN.NS': 'TITAN.NS',
+  'M&M.NS': 'M&M.NS',
+  'ADANIENT.NS': 'ADANIENT.NS',
+  'WIPRO.NS': 'WIPRO.NS',
+  'ZOMATO.NS': 'ZOMATO.NS',
+  'JIOFIN.NS': 'JIOFIN.NS',
+  'NTPC.NS': 'NTPC.NS',
 };
 
 export function formatVolume(val) {
@@ -146,15 +160,22 @@ export async function fetchYahooQuotes(symbols) {
 }
 
 // ─── Yahoo Chart History (OHLC) ─────────────────────────────────────
-export async function fetchYahooChart(symbol, interval = '15m') {
+export async function fetchYahooChart(symbol, interval = '15m', range = '1mo') {
   try {
-    // First try 1d range for current day intraday
-    let data = await fetchWithProxyFallback(`/v8/finance/chart/${symbol}?interval=${interval}&range=1d`);
+    // Determine appropriate interval based on range
+    let queryInterval = interval;
+    if (range === '1y' || range === 'max') {
+      queryInterval = '1d';
+    } else if (range === '3mo' || range === '6mo') {
+      queryInterval = '1h';
+    }
+
+    let data = await fetchWithProxyFallback(`/v8/finance/chart/${symbol}?interval=${queryInterval}&range=${range}`);
     let result = data?.chart?.result?.[0];
 
-    // If no timestamps (e.g. weekend or market closed), fetch 5d to get last active trading session
+    // If no timestamps, fallback to 1y / 5d
     if (!result?.timestamp || result.timestamp.length === 0) {
-      data = await fetchWithProxyFallback(`/v8/finance/chart/${symbol}?interval=${interval}&range=5d`);
+      data = await fetchWithProxyFallback(`/v8/finance/chart/${symbol}?interval=1d&range=1y`);
       result = data?.chart?.result?.[0];
     }
 
@@ -182,8 +203,8 @@ export async function fetchYahooChart(symbol, interval = '15m') {
       }
     }
 
-    // Keep the most recent 35-40 candles for a clean sparkline/overview
-    return validBars.length > 40 ? validBars.slice(-40) : validBars;
+    // Return all valid bars without arbitrary 40-candle limitation
+    return validBars.length > 0 ? validBars : null;
   } catch (e) {
     console.warn('Yahoo chart fetch failed:', e.message);
     return null;
@@ -272,7 +293,7 @@ export function mockTick(current, type = 'Stock') {
 }
 
 // ─── Generate realistic mock OHLC fallback aligned to session ─────────
-export function generateMockOHLC(basePrice, count = 30, intervalSec = 900) {
+export function generateMockOHLC(basePrice, count = 100, intervalSec = 900) {
   const points = [];
   // Use last closed session time or recent hour
   const now = Math.floor(Date.now() / 1000);

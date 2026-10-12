@@ -17,7 +17,8 @@ import {
   LogOut,
   Settings,
   ShieldAlert,
-  Trophy
+  Trophy,
+  Crown
 } from 'lucide-react';
 
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -35,21 +36,16 @@ import MFTab from './components/MFTab.jsx';
 import LeaderboardTab from './components/LeaderboardTab.jsx';
 import AdminTab from './components/AdminTab.jsx';
 import FAQTab from './components/FAQTab.jsx';
+import SubscriptionModal from './components/SubscriptionModal.jsx';
 import { 
   HelpCircle, 
   BookOpen, 
   Building2, 
   Newspaper, 
-  Award, 
-  Headphones, 
-  Users2 
+  Headphones 
 } from 'lucide-react';
-import DictionaryTab from './components/DictionaryTab.jsx';
 import BankingRatesTab from './components/BankingRatesTab.jsx';
-import NewsTab from './components/NewsTab.jsx';
-import ReviewsTab from './components/ReviewsTab.jsx';
-import WealthTab from './components/WealthTab.jsx';
-import AdvisorTab from './components/AdvisorTab.jsx';
+import FinanceHubTab from './components/FinanceHubTab.jsx';
 import {
   MAX_SIMULATED_CASH,
   STARTING_SIMULATED_CASH,
@@ -60,19 +56,59 @@ import {
   normalizePortfolio
 } from './lib/tradingGuards.mjs';
 import { fetchLiveQuotes, mockTick } from './lib/marketData.js';
+import {
+  loadStoredPortfolio,
+  saveStoredPortfolio,
+  loadStoredKyc,
+  saveStoredKyc,
+  loadStoredPlan,
+  saveStoredPlan,
+  loadStoredGuestSession,
+  saveStoredGuestSession
+} from './lib/storage.js';
 
 // Initial Mock Assets Data
 const INITIAL_WATCHLIST = [
+  // Indian Equities (NSE)
   { symbol: 'RELIANCE.NS', name: 'Reliance Industries', price: 1167.70, changePercent: -1.63, type: 'Stock', sparkline: [1180, 1175, 1170, 1165, 1168, 1167.70] },
   { symbol: 'TCS.NS', name: 'Tata Consultancy Services', price: 2075.00, changePercent: 1.19, type: 'Stock', sparkline: [2045, 2050, 2060, 2070, 2072, 2075] },
   { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', price: 721.20, changePercent: 1.76, type: 'Stock', sparkline: [705, 710, 712, 715, 718, 721.20] },
   { symbol: 'INFY.NS', name: 'Infosys Ltd.', price: 1035.00, changePercent: 4.11, type: 'Stock', sparkline: [995, 1005, 1015, 1025, 1030, 1035] },
   { symbol: 'ICICIBANK.NS', name: 'ICICI Bank', price: 1310.60, changePercent: -0.84, type: 'Stock', sparkline: [1325, 1320, 1315, 1312, 1314, 1310.60] },
+  { symbol: 'HINDUNILVR.NS', name: 'Hindustan Unilever', price: 1836.00, changePercent: -2.29, type: 'Stock', sparkline: [1860, 1855, 1845, 1840, 1838, 1836.00] },
+  { symbol: 'ITC.NS', name: 'ITC Ltd.', price: 255.90, changePercent: -2.61, type: 'Stock', sparkline: [262, 260, 258, 257, 256, 255.90] },
   { symbol: 'SBIN.NS', name: 'State Bank of India', price: 954.10, changePercent: -0.56, type: 'Stock', sparkline: [960, 958, 955, 952, 953, 954.10] },
-  { symbol: 'NIFTY50', name: 'Nifty 50 Index', price: 24850.00, changePercent: 0.65, type: 'Index', sparkline: [24600,24650,24700,24750,24800,24850] },
-  { symbol: 'BTC', name: 'Bitcoin', price: 84516.00, changePercent: -2.44, type: 'Crypto', sparkline: [85500,85200,84900,84600,84550,84516] },
-  { symbol: 'USDINR=X', name: 'USD / Indian Rupee', price: 96.30, changePercent: -0.01, type: 'Forex', sparkline: [96.35,96.33,96.32,96.31,96.30,96.30] },
-  { symbol: 'GBPINR=X', name: 'GBP / Indian Rupee', price: 127.51, changePercent: 0.37, type: 'Forex', sparkline: [126.8,127.0,127.2,127.3,127.4,127.51] },
+  { symbol: 'BHARTIARTL.NS', name: 'Bharti Airtel', price: 1720.00, changePercent: 1.25, type: 'Stock', sparkline: [1695, 1700, 1708, 1712, 1715, 1720] },
+  { symbol: 'LT.NS', name: 'Larsen & Toubro', price: 3480.00, changePercent: 0.88, type: 'Stock', sparkline: [3440, 3450, 3465, 3470, 3475, 3480] },
+  { symbol: 'TATAMOTORS.NS', name: 'Tata Motors', price: 812.50, changePercent: -1.15, type: 'Stock', sparkline: [825, 822, 818, 816, 814, 812.5] },
+  { symbol: 'SUNPHARMA.NS', name: 'Sun Pharmaceutical', price: 1890.00, changePercent: 0.64, type: 'Stock', sparkline: [1870, 1878, 1880, 1884, 1888, 1890] },
+  { symbol: 'BAJFINANCE.NS', name: 'Bajaj Finance', price: 7150.00, changePercent: 1.45, type: 'Stock', sparkline: [7020, 7060, 7090, 7120, 7140, 7150] },
+  { symbol: 'ASIANPAINT.NS', name: 'Asian Paints', price: 2420.00, changePercent: -0.42, type: 'Stock', sparkline: [2435, 2430, 2428, 2425, 2422, 2420] },
+  { symbol: 'MARUTI.NS', name: 'Maruti Suzuki India', price: 11850.00, changePercent: 0.92, type: 'Stock', sparkline: [11700, 11750, 11790, 11810, 11830, 11850] },
+  { symbol: 'TITAN.NS', name: 'Titan Company', price: 3260.00, changePercent: -0.75, type: 'Stock', sparkline: [3290, 3280, 3275, 3270, 3265, 3260] },
+  { symbol: 'M&M.NS', name: 'Mahindra & Mahindra', price: 2840.00, changePercent: 2.10, type: 'Stock', sparkline: [2760, 2780, 2800, 2815, 2830, 2840] },
+  { symbol: 'ADANIENT.NS', name: 'Adani Enterprises', price: 2410.00, changePercent: -1.80, type: 'Stock', sparkline: [2460, 2445, 2430, 2425, 2418, 2410] },
+  { symbol: 'WIPRO.NS', name: 'Wipro Ltd.', price: 565.00, changePercent: 0.35, type: 'Stock', sparkline: [561, 562, 563, 564, 564.5, 565] },
+  { symbol: 'ZOMATO.NS', name: 'Zomato Ltd.', price: 275.50, changePercent: 3.20, type: 'Stock', sparkline: [265, 268, 270, 272, 274, 275.5] },
+  { symbol: 'JIOFIN.NS', name: 'Jio Financial Services', price: 315.00, changePercent: 1.10, type: 'Stock', sparkline: [310, 311, 312, 313, 314, 315] },
+  { symbol: 'NTPC.NS', name: 'NTPC Ltd.', price: 395.00, changePercent: 0.50, type: 'Stock', sparkline: [391, 392, 393, 394, 394.5, 395] },
+  { symbol: 'NIFTY50', name: 'Nifty 50 Index', price: 24850.00, changePercent: 0.65, type: 'Index', sparkline: [24600, 24650, 24700, 24750, 24800, 24850] },
+
+  // Crypto
+  { symbol: 'BTC', name: 'Bitcoin', price: 84516.00, changePercent: -2.44, type: 'Crypto', sparkline: [85500, 85200, 84900, 84600, 84550, 84516] },
+  { symbol: 'ETH', name: 'Ethereum', price: 2673.70, changePercent: -2.48, type: 'Crypto', sparkline: [2740, 2720, 2700, 2685, 2678, 2673.70] },
+  { symbol: 'SOL', name: 'Solana', price: 119.00, changePercent: -3.60, type: 'Crypto', sparkline: [123, 122, 121, 120, 119.5, 119.00] },
+  { symbol: 'DOGE', name: 'Dogecoin', price: 0.1650, changePercent: -1.20, type: 'Crypto', sparkline: [0.168, 0.167, 0.166, 0.165, 0.165, 0.1650] },
+  { symbol: 'ADA', name: 'Cardano', price: 0.4250, changePercent: -0.85, type: 'Crypto', sparkline: [0.43, 0.428, 0.427, 0.426, 0.425, 0.4250] },
+  { symbol: 'BNB', name: 'BNB', price: 625.00, changePercent: -1.10, type: 'Crypto', sparkline: [632, 630, 628, 626, 625.5, 625.00] },
+
+  // Forex
+  { symbol: 'USDINR=X', name: 'USD / Indian Rupee', price: 96.30, changePercent: -0.01, type: 'Forex', sparkline: [96.35, 96.33, 96.32, 96.31, 96.30, 96.30] },
+  { symbol: 'GBPINR=X', name: 'GBP / Indian Rupee', price: 127.51, changePercent: 0.37, type: 'Forex', sparkline: [126.8, 127.0, 127.2, 127.3, 127.4, 127.51] },
+  { symbol: 'EURINR=X', name: 'EUR / Indian Rupee', price: 108.35, changePercent: 0.02, type: 'Forex', sparkline: [108.3, 108.32, 108.34, 108.33, 108.35, 108.35] },
+  { symbol: 'JPYINR=X', name: 'JPY / Indian Rupee', price: 0.6340, changePercent: -0.15, type: 'Forex', sparkline: [0.635, 0.635, 0.634, 0.634, 0.634, 0.6340] },
+  { symbol: 'EURUSD=X', name: 'EUR / USD', price: 1.1257, changePercent: 0.11, type: 'Forex', sparkline: [1.124, 1.125, 1.125, 1.126, 1.1255, 1.1257] },
+  { symbol: 'GBPUSD=X', name: 'GBP / USD', price: 1.3240, changePercent: 0.35, type: 'Forex', sparkline: [1.32, 1.321, 1.322, 1.323, 1.324, 1.3240] },
 ];
 
 // Initial Portfolio state
@@ -84,10 +120,6 @@ const INITIAL_PORTFOLIO = {
   todayPnL: 0,
   todayPnLPercent: 0,
   history: [
-    { value: 8000000 },
-    { value: 8000000 },
-    { value: 8000000 },
-    { value: 8000000 },
     { value: 8000000 }
   ],
   orders: [],
@@ -104,12 +136,14 @@ const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
 function App() {
   const { user, loading, error: authError, signInWithGoogle, signInWithGitHub, signOut } = useAuth();
 
-  const [isGuest, setIsGuest] = useState(false);
+  const [isGuest, setIsGuest] = useState(() => loadStoredGuestSession());
   const [activeTab, setActiveTab] = useState('home');
   const [selectedAssetSymbol, setSelectedAssetSymbol] = useState('BTC');
   const [watchlist, setWatchlist] = useState(INITIAL_WATCHLIST);
-  const [portfolio, setPortfolio] = useState(INITIAL_PORTFOLIO);
-  const [kycCompleted, setKycCompleted] = useState(false);
+  const [portfolio, setPortfolio] = useState(() => loadStoredPortfolio(INITIAL_PORTFOLIO));
+  const [kycCompleted, setKycCompleted] = useState(() => loadStoredKyc());
+  const [userPlan, setUserPlan] = useState(() => loadStoredPlan());
+  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [timeStr, setTimeStr] = useState('');
 
@@ -124,18 +158,21 @@ function App() {
 
   const resetSessionData = () => {
     setPortfolio(INITIAL_PORTFOLIO);
+    saveStoredPortfolio(INITIAL_PORTFOLIO);
     setKycCompleted(false);
+    saveStoredKyc(false);
     kycCompletedRef.current = false;
     setNotifications([]);
     setActiveTab('home');
   };
 
   const startGuestSession = () => {
-    resetSessionData();
+    saveStoredGuestSession(true);
     setIsGuest(true);
   };
 
   const endGuestSession = () => {
+    saveStoredGuestSession(false);
     setIsGuest(false);
     resetSessionData();
   };
@@ -151,6 +188,7 @@ function App() {
         photoURL: user.photoURL || '',
         portfolio: safePortfolio,
         kycCompleted: kycOverride !== undefined ? kycOverride : kycCompletedRef.current,
+        plan: userPlan,
         updatedAt: new Date().toISOString()
       }, { merge: true });
     } catch (e) {
@@ -161,6 +199,7 @@ function App() {
   const commitPortfolio = (nextPortfolio) => {
     const safePortfolio = normalizePortfolio(nextPortfolio, INITIAL_PORTFOLIO);
     setPortfolio(safePortfolio);
+    saveStoredPortfolio(safePortfolio);
     savePortfolioToDB(safePortfolio);
     return safePortfolio;
   };
@@ -168,6 +207,7 @@ function App() {
   const updateKycStatus = async (status) => {
     setKycCompleted(status);
     kycCompletedRef.current = status;
+    saveStoredKyc(status);
     if (user) {
       try {
         await setDoc(doc(db, 'users', user.uid), {
@@ -180,19 +220,43 @@ function App() {
     }
   };
 
+  const handleSelectPlan = async (plan) => {
+    setUserPlan(plan);
+    saveStoredPlan(plan);
+    if (user) {
+      try {
+        await setDoc(doc(db, 'users', user.uid), {
+          plan,
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      } catch (e) {
+        console.error("Error saving subscription plan to DB", e);
+      }
+    }
+  };
+
   // Fetch data on login
   useEffect(() => {
     if (!user) return;
+    saveStoredGuestSession(false);
+    setIsGuest(false);
     const fetchUserData = async () => {
       const userRef = doc(db, 'users', user.uid);
       const userSnap = await getDoc(userRef);
       if (userSnap.exists()) {
         const data = userSnap.data();
         if (data.portfolio) {
-          setPortfolio(normalizePortfolio(data.portfolio, INITIAL_PORTFOLIO));
+          const merged = normalizePortfolio(data.portfolio, INITIAL_PORTFOLIO);
+          setPortfolio(merged);
+          saveStoredPortfolio(merged);
         }
         if (data.kycCompleted !== undefined) {
           setKycCompleted(data.kycCompleted);
+          saveStoredKyc(data.kycCompleted);
+        }
+        if (data.plan) {
+          setUserPlan(data.plan);
+          saveStoredPlan(data.plan);
         }
       } else {
         // Initialize in DB
@@ -612,6 +676,11 @@ function App() {
   };
 
   const depositSimulatedCash = (amount) => {
+    if (userPlan === 'free') {
+      setIsUpgradeModalOpen(true);
+      return false;
+    }
+
     const requested = clampDepositAmount(amount);
     const allowed = Math.min(requested, Math.max(0, MAX_SIMULATED_CASH - portfolio.balance));
 
@@ -648,12 +717,8 @@ function App() {
     { id: 'orders', label: 'Orders', icon: Receipt },
     { id: 'fo', label: 'F&O', icon: Zap },
     { id: 'mutual-funds', label: 'Mutual Funds', icon: PieChart },
-    { id: 'dictionary', label: 'Dictionary', icon: BookOpen },
+    { id: 'finance-hub', label: 'Finance Hub', icon: BookOpen },
     { id: 'banking-rates', label: 'Banking & Yields', icon: Building2 },
-    { id: 'news', label: 'News', icon: Newspaper },
-    { id: 'reviews', label: 'Reviews', icon: Award },
-    { id: 'wealth', label: 'Wealth', icon: Headphones },
-    { id: 'advisors', label: 'Advisor Council', icon: Users2 },
     { id: 'settings', label: 'Settings', icon: Settings },
     { id: 'faq', label: 'FAQ', icon: HelpCircle }
   ];
@@ -775,6 +840,29 @@ function App() {
           </div>
 
           <div className="header-right">
+            {/* Subscription Tier Button */}
+            <button 
+              onClick={() => setIsUpgradeModalOpen(true)}
+              className="trade-btn hover-glow"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                borderRadius: '9999px',
+                fontSize: '12px',
+                fontWeight: 600,
+                border: userPlan === 'free' ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(56, 189, 248, 0.6)',
+                background: userPlan === 'free' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.15)',
+                color: userPlan === 'free' ? '#fbbf24' : '#38bdf8',
+                cursor: 'pointer'
+              }}
+              title="View Subscription Plans"
+            >
+              <Crown size={14} />
+              <span>{userPlan === 'free' ? 'Free plan · Upgrade' : `${userPlan.toUpperCase()} Plan`}</span>
+            </button>
+
             {/* Real-time cycling ticker */}
             <div className="pl-ticker-container">
               <span className="pl-ticker-label">Today's P&L</span>
@@ -842,6 +930,8 @@ function App() {
               setActiveTab={setActiveTab} 
               setSelectedAssetSymbol={setSelectedAssetSymbol}
               depositSimulatedCash={depositSimulatedCash}
+              userPlan={userPlan}
+              onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
             />
           )}
 
@@ -856,7 +946,7 @@ function App() {
           )}
 
           {activeTab === 'dashboard' && (
-            <DashboardTab portfolio={portfolio} />
+            <DashboardTab portfolio={portfolio} watchlist={watchlist} />
           )}
 
           {activeTab === 'ai-insights' && (
@@ -872,6 +962,7 @@ function App() {
               portfolio={portfolio} 
               watchlist={watchlist} 
               cancelOrder={cancelOrder}
+              executeTrade={executeTrade}
             />
           )}
 
@@ -882,6 +973,8 @@ function App() {
               resetPortfolio={resetPortfolio}
               portfolio={portfolio}
               userDisplayName={displayName}
+              userPlan={userPlan}
+              onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
             />
           )}
 
@@ -891,6 +984,7 @@ function App() {
               portfolio={portfolio} 
               executeTrade={executeTrade} 
               kycCompleted={kycCompleted} 
+              setKycCompleted={updateKycStatus}
               setActiveTab={setActiveTab} 
             />
           )}
@@ -906,28 +1000,12 @@ function App() {
             <LeaderboardTab />
           )}
 
-          {activeTab === 'dictionary' && (
-            <DictionaryTab setActiveTab={setActiveTab} />
+          {(activeTab === 'finance-hub' || activeTab === 'dictionary' || activeTab === 'news' || activeTab === 'wealth' || activeTab === 'comparison') && (
+            <FinanceHubTab setActiveTab={setActiveTab} />
           )}
 
           {activeTab === 'banking-rates' && (
             <BankingRatesTab setActiveTab={setActiveTab} />
-          )}
-
-          {activeTab === 'news' && (
-            <NewsTab setActiveTab={setActiveTab} />
-          )}
-
-          {activeTab === 'reviews' && (
-            <ReviewsTab setActiveTab={setActiveTab} />
-          )}
-
-          {activeTab === 'wealth' && (
-            <WealthTab setActiveTab={setActiveTab} />
-          )}
-
-          {activeTab === 'advisors' && (
-            <AdvisorTab setActiveTab={setActiveTab} />
           )}
 
           {activeTab === 'faq' && (
@@ -955,6 +1033,14 @@ function App() {
           );
         })}
       </nav>
+
+      {/* Subscription Modal */}
+      <SubscriptionModal 
+        isOpen={isUpgradeModalOpen} 
+        onClose={() => setIsUpgradeModalOpen(false)} 
+        currentPlan={userPlan} 
+        onSelectPlan={handleSelectPlan} 
+      />
     </div>
   );
 }

@@ -1,5 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { User, Shield, ShieldAlert, ShieldCheck, RefreshCw, Zap, BookOpen, Eye, EyeOff, Moon, Sun } from 'lucide-react';
+import { 
+  User, 
+  Shield, 
+  ShieldAlert, 
+  ShieldCheck, 
+  RefreshCw, 
+  Zap, 
+  BookOpen, 
+  Eye, 
+  EyeOff, 
+  Moon, 
+  Sun,
+  Crown,
+  Sparkles,
+  Check,
+  AlertCircle
+} from 'lucide-react';
 import { formatINR } from '../lib/format.mjs';
 
 export default function SettingsTab({ 
@@ -7,16 +23,25 @@ export default function SettingsTab({
   setKycCompleted, 
   resetPortfolio,
   portfolio,
-  userDisplayName 
+  userDisplayName,
+  userPlan = 'free',
+  onOpenUpgradeModal
 }) {
-  const [kycStep, setKycStep] = useState(kycCompleted ? 4 : 1); // 1, 2, 3, 4 (completed)
-  const [fullName, setFullName] = useState('');
-  const [riskTolerance, setRiskTolerance] = useState('');
-  const [tradingExp, setTradingExp] = useState('');
-  const [optionsKnowledge, setOptionsKnowledge] = useState('');
+  const [kycStep, setKycStep] = useState(kycCompleted ? 4 : 1);
+  const [fullName, setFullName] = useState(userDisplayName || '');
+  const [riskTolerance, setRiskTolerance] = useState('Moderate');
+  const [tradingExp, setTradingExp] = useState('experienced');
+  const [optionsKnowledge, setOptionsKnowledge] = useState('right');
+  const [kycError, setKycError] = useState('');
   
   const [showAmounts, setShowAmounts] = useState(false);
   const [isLightMode, setIsLightMode] = useState(false);
+
+  useEffect(() => {
+    if (userDisplayName && !fullName) {
+      setFullName(userDisplayName);
+    }
+  }, [userDisplayName]);
 
   useEffect(() => {
     if (kycCompleted) {
@@ -38,21 +63,22 @@ export default function SettingsTab({
   const totalTradesCount = portfolio.orderHistory.length;
   const positionsCount = portfolio.positions.length;
   const netWorth = portfolio.balance + portfolio.positions.reduce((acc, pos) => acc + (pos.shares * pos.avgBuyPrice), 0);
-  const STARTING_CASH = 8000000; // Must match STARTING_SIMULATED_CASH in src/lib/tradingGuards.mjs
+  const STARTING_CASH = 8000000;
   const netProfit = netWorth - STARTING_CASH;
 
   const handleNextStep = () => {
+    setKycError('');
     if (kycStep === 1 && !fullName.trim()) {
-      alert("Please enter your name to proceed.");
+      setKycError("Please enter your full name to proceed with verification.");
       return;
     }
     if (kycStep === 2 && !riskTolerance) {
-      alert("Please select your risk tolerance.");
+      setKycError("Please select a simulated risk tolerance.");
       return;
     }
     if (kycStep === 3) {
       if (!tradingExp || !optionsKnowledge) {
-        alert("Please answer all questions before submitting.");
+        setKycError("Please answer all questions before submitting.");
         return;
       }
       // KYC Successful!
@@ -63,13 +89,27 @@ export default function SettingsTab({
     setKycStep(kycStep + 1);
   };
 
+  const handlePrevStep = () => {
+    setKycError('');
+    if (kycStep > 1) {
+      setKycStep(kycStep - 1);
+    }
+  };
+
+  const handleExpressVerify = () => {
+    setKycError('');
+    setFullName(userDisplayName || 'Commerce Trader');
+    setRiskTolerance('Aggressive');
+    setTradingExp('experienced');
+    setOptionsKnowledge('right');
+    setKycCompleted(true);
+    setKycStep(4);
+  };
+
   const handleResetKyc = () => {
+    setKycError('');
     setKycCompleted(false);
     setKycStep(1);
-    setFullName('');
-    setRiskTolerance('');
-    setTradingExp('');
-    setOptionsKnowledge('');
   };
 
   const handleResetSim = () => {
@@ -86,47 +126,96 @@ export default function SettingsTab({
   return (
     <div className="tab-panel active">
       <div className="grid-container-2col">
-        {/* Left Side: Stats and Settings */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Profile overview card */}
-          <div className="glassy-card hover-glow" style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+        {/* Left Side: Profile, Membership & Settings */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          
+          {/* Profile Overview Card */}
+          <div className="glassy-card hover-glow" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ 
-              width: '64px', 
-              height: '64px', 
+              width: '56px', 
+              height: '56px', 
               borderRadius: '50%', 
-              background: 'linear-gradient(135deg, var(--color-teal), var(--color-st-patty))',
-              display: 'flex',
-              alignItems: 'center',
+              backgroundColor: 'rgba(13, 242, 201, 0.1)', 
+              color: 'var(--color-teal)', 
+              display: 'flex', 
+              alignItems: 'center', 
               justifyContent: 'center',
-              color: '#fff',
-              fontSize: '24px',
-              fontWeight: 'bold'
+              border: '1px solid rgba(13, 242, 201, 0.2)'
             }}>
-              {userDisplayName ? userDisplayName.charAt(0).toUpperCase() : <User />}
+              <User size={28} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '20px' }}>{userDisplayName || 'Guest Trader'}</h2>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '18px', color: 'var(--color-text-primary)', margin: 0 }}>
+                  {userDisplayName || 'Guest Trader'}
+                </h3>
                 {kycCompleted ? (
-                  <span className="badge-interactive" style={{ backgroundColor: 'rgba(93, 211, 148, 0.1)', color: 'var(--color-jade)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', fontWeight: '700' }}>
+                  <span className="badge-interactive" style={{ background: 'rgba(93, 211, 148, 0.15)', color: 'var(--color-jade)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <ShieldCheck size={12} /> KYC VERIFIED
                   </span>
                 ) : (
-                  <span className="badge-interactive" style={{ backgroundColor: 'rgba(255, 77, 77, 0.1)', color: 'var(--color-rose)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', fontWeight: '700' }}>
+                  <span className="badge-interactive" style={{ background: 'rgba(255, 77, 77, 0.15)', color: 'var(--color-rose)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                     <ShieldAlert size={12} /> KYC UNVERIFIED
                   </span>
                 )}
               </div>
-              <p style={{ color: 'var(--color-text-secondary)', fontSize: '13px', marginTop: '2px' }}>
-                Level 1 Paper Trader &bull; Virtual Simulator Account
+              <p style={{ color: 'var(--color-text-secondary)', fontSize: '13px', marginTop: '4px' }}>
+                {userPlan.toUpperCase()} Trader · Verified Simulation Account
               </p>
             </div>
           </div>
 
-          {/* Stats Grid */}
+          {/* Membership Tier Card (Flaw 4 & 5) */}
+          <div className="glassy-card hover-glow" style={{ 
+            background: userPlan === 'max' 
+              ? 'linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(15, 23, 42, 0.8))'
+              : userPlan === 'pro'
+              ? 'linear-gradient(135deg, rgba(13, 242, 201, 0.1), rgba(15, 23, 42, 0.8))'
+              : 'var(--color-card)',
+            border: userPlan === 'max' ? '1px solid #f59e0b' : userPlan === 'pro' ? '1px solid var(--color-teal)' : '1px solid var(--color-border)',
+            padding: '20px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {userPlan === 'max' ? <Crown size={20} color="#f59e0b" /> : userPlan === 'pro' ? <Zap size={20} color="var(--color-teal)" /> : <Sparkles size={20} color="var(--color-text-secondary)" />}
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', margin: 0, color: '#fff' }}>
+                  {userPlan.toUpperCase()} Membership
+                </h3>
+              </div>
+              <span style={{ 
+                fontSize: '0.72rem', 
+                padding: '2px 8px', 
+                borderRadius: '4px', 
+                background: userPlan === 'free' ? 'rgba(255,255,255,0.06)' : 'rgba(93,211,148,0.15)', 
+                color: userPlan === 'free' ? 'var(--color-text-muted)' : 'var(--color-jade)', 
+                fontWeight: 800 
+              }}>
+                ACTIVE
+              </span>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: '16px' }}>
+              {userPlan === 'free' 
+                ? 'Standard paper trading features enabled. Additional capital sheet is locked on Free Tier.' 
+                : userPlan === 'pro'
+                ? 'Pro Tier Active: Custom simulated deposits unlocked up to ₹2 Crore + Priority Gemini AI.'
+                : 'Max Tier Active: Unlimited simulated deposits up to ₹5 Crore + Full Institutional derivatives.'}
+            </p>
+
+            <button
+              onClick={onOpenUpgradeModal}
+              className={`trade-btn ${userPlan === 'free' ? 'primary-btn hover-glow' : 'secondary-btn'}`}
+              style={{ width: '100%', padding: '8px 12px', fontSize: '0.85rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+            >
+              {userPlan === 'free' ? <Zap size={16} /> : <Crown size={16} />}
+              {userPlan === 'free' ? 'Buy Pro / Max Plan' : 'Manage Membership Tiers'}
+            </button>
+          </div>
+
+          {/* Account Stats Grid */}
           <div className="glassy-card hover-glow" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px' }}>Simulated Account Stats</h3>
+              <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', margin: 0 }}>Simulated Account Stats</h3>
               <button 
                 onClick={() => setShowAmounts(!showAmounts)} 
                 aria-label={showAmounts ? 'Hide account amounts' : 'Show account amounts'}
@@ -154,7 +243,7 @@ export default function SettingsTab({
 
           {/* System Settings card */}
           <div className="glassy-card hover-glow" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px' }}>System Settings</h3>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', margin: 0 }}>System Settings</h3>
             
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--color-border)' }}>
               <div>
@@ -186,26 +275,49 @@ export default function SettingsTab({
                   style={{ flex: 1 }}
                   onClick={handleResetKyc}
                 >
-                  Reset KYC Status
+                  Reset KYC
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Side: KYC Quiz */}
+        {/* Right Side: KYC Quiz & Fast Track Verification (Flaw 9) */}
         <div className="glassy-card hover-glow" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Shield size={18} style={{ color: 'var(--color-teal)' }} /> Futures & Options KYC Quiz
-            </h3>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginTop: '2px' }}>
-              Unlock advanced F&O leverage, derivatives and complex contracts simulations.
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '16px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Shield size={18} style={{ color: 'var(--color-teal)' }} /> Futures & Options KYC Verification
+                </h3>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginTop: '4px' }}>
+                  Mandatory regulatory simulation to unlock derivatives leverage & options chain trading.
+                </p>
+              </div>
+
+              {!kycCompleted && (
+                <button 
+                  type="button"
+                  className="trade-btn buy-btn hover-glow" 
+                  style={{ fontSize: '12px', padding: '6px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+                  onClick={handleExpressVerify}
+                >
+                  <Zap size={14} /> Instant 1-Click Fast Track
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Steps visual indicators */}
-          {kycStep <= 3 && (
+          {/* Inline Error Banner */}
+          {kycError && (
+            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.3)', color: '#f87171', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={16} />
+              <span>{kycError}</span>
+            </div>
+          )}
+
+          {/* Steps Visual Indicator */}
+          {kycStep <= 3 && !kycCompleted && (
             <div className="kyc-step-container">
               <div className="kyc-progress-bar">
                 <div className="kyc-progress-fill" style={{ width: `${((kycStep - 1) / 2) * 100}%` }}></div>
@@ -221,19 +333,18 @@ export default function SettingsTab({
                     <label className="form-label">Full Name</label>
                     <input 
                       type="text" 
-                      placeholder="e.g. Satoshi Nakamoto" 
+                      placeholder="e.g. Ishaan Kalra" 
                       className="form-input"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Simulated Country of Residence</label>
-                    <select className="form-input form-select" defaultValue="US" aria-label="Simulated country of residence">
-                      <option value="US">United States</option>
-                      <option value="IN">India</option>
+                    <label className="form-label">Simulated Jurisdiction</label>
+                    <select className="form-input form-select" defaultValue="IN" aria-label="Simulated country of residence">
+                      <option value="IN">India (NSE / BSE)</option>
+                      <option value="US">United States (CBOE / CME)</option>
                       <option value="UK">United Kingdom</option>
-                      <option value="DE">Germany</option>
                     </select>
                   </div>
                 </div>
@@ -245,8 +356,8 @@ export default function SettingsTab({
                   <span className="form-label" style={{ marginBottom: '6px' }}>Select Risk Profile:</span>
                   {[
                     { key: 'Conservative', desc: 'Focus on preserving capital (Index mutual funds, Blue-chip stocks)' },
-                    { key: 'Moderate', desc: 'Balanced growth (Growth stocks, major cryptos)' },
-                    { key: 'Aggressive', desc: 'High volatility, high reward (Leveraged futures, option chains)' }
+                    { key: 'Moderate', desc: 'Balanced growth (Large-caps, balanced funds)' },
+                    { key: 'Aggressive', desc: 'High volatility, high reward (Leveraged futures, options chains, fusion)' }
                   ].map(item => (
                     <button 
                       key={item.key}
@@ -265,7 +376,7 @@ export default function SettingsTab({
               {kycStep === 3 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div className="form-group">
-                    <span className="form-label" style={{ marginBottom: '6px' }}>How long have you traded in simulators or live?</span>
+                    <span className="form-label" style={{ marginBottom: '6px' }}>How long have you traded in simulators or live markets?</span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {[
                         { val: 'novice', label: 'Under 1 Year' },
@@ -286,11 +397,11 @@ export default function SettingsTab({
                   </div>
 
                   <div className="form-group">
-                    <span className="form-label" style={{ marginBottom: '6px' }}>What is leverage in futures trading?</span>
+                    <span className="form-label" style={{ marginBottom: '6px' }}>What does leverage represent in derivatives trading?</span>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {[
-                        { val: 'wrong', label: 'A way to get free cash from the broker' },
-                        { val: 'right', label: 'Borrowing capital to multiply position size & volatility risk' }
+                        { val: 'wrong', label: 'Guaranteed risk-free multiplier provided by the broker' },
+                        { val: 'right', label: 'Borrowing exposure to amplify capital return and downside volatility' }
                       ].map(o => (
                         <button 
                           key={o.val}
@@ -307,13 +418,25 @@ export default function SettingsTab({
                 </div>
               )}
 
-              <button 
-                className="trade-btn buy-btn" 
-                style={{ width: '100%', marginTop: '10px' }}
-                onClick={handleNextStep}
-              >
-                {kycStep === 3 ? "Submit KYC Verification" : "Continue to Next Step"}
-              </button>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '12px' }}>
+                {kycStep > 1 && (
+                  <button 
+                    type="button"
+                    className="trade-btn secondary-btn hover-glow" 
+                    style={{ flex: 1 }}
+                    onClick={handlePrevStep}
+                  >
+                    Back
+                  </button>
+                )}
+                <button 
+                  className="trade-btn buy-btn" 
+                  style={{ flex: kycStep > 1 ? 2 : 1 }}
+                  onClick={handleNextStep}
+                >
+                  {kycStep === 3 ? "Submit KYC Verification" : "Continue to Next Step"}
+                </button>
+              </div>
             </div>
           )}
 
@@ -333,9 +456,9 @@ export default function SettingsTab({
                 <ShieldCheck size={40} />
               </div>
               <div>
-                <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '18px', color: 'var(--color-text-primary)' }}>KYC Simulation Approved!</h4>
-                <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginTop: '6px', maxWidth: '300px' }}>
-                  Congratulations, you have unlocked options trading and leverages. You can now use the <strong>F&O</strong> tab!
+                <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '18px', color: 'var(--color-text-primary)' }}>KYC Simulation Approved & Active!</h4>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '12px', marginTop: '6px', maxWidth: '320px', lineHeight: 1.5 }}>
+                  Verified permanently in local & account storage. Full access unlocked for the <strong>F&O</strong> derivatives suite.
                 </p>
               </div>
             </div>

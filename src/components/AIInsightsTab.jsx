@@ -1,5 +1,75 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Brain, Cpu, MessageSquare, Newspaper, Send, ArrowRight, Activity, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { 
+  Brain, 
+  Cpu, 
+  MessageSquare, 
+  Newspaper, 
+  Send, 
+  Plus, 
+  Trash2, 
+  Activity, 
+  Sparkles, 
+  Bot, 
+  User as UserIcon, 
+  RefreshCw, 
+  Clock, 
+  PanelLeftClose, 
+  PanelLeftOpen,
+  ArrowRight
+} from 'lucide-react';
+
+const AI_SESSIONS_STORAGE_KEY = 'stockshadow_ai_chat_sessions_v2';
+
+const DEFAULT_WELCOME_MSG = {
+  role: 'ai',
+  content: "Hello! I am your TradeFlow AI quantitative assistant powered by Gemini. Ask me about portfolio optimization, derivatives & fusion options, macro trends, or individual stock setups."
+};
+
+const INITIAL_SESSIONS = [
+  {
+    id: 'session-fusion',
+    title: 'Exploring Fusion Options & Derivatives',
+    createdAt: Date.now() - 3600000,
+    messages: [
+      { role: 'user', content: 'What is a fusion option and how does it work?' },
+      { 
+        role: 'ai', 
+        content: `### Quantitative Analysis: Fusion Options & Hybrid Derivatives\n\nIn quantitative derivatives engineering, a **Fusion Option** (often structured as a multi-asset hybrid or correlation basket option) is an advanced contract whose payoff depends simultaneously on the co-dependence and volatility cross-product of two or more distinct underlying asset classes (e.g., Equity + Currency, or Equity + Commodity).\n\n#### 1. Core Mechanics\n* **Underlying Vector:** Tracks a vector $\\mathbf{S}_t = (S_1, S_2, \\dots, S_n)$ with an empirical correlation matrix $\\mathbf{\\Sigma}$.\n* **Standard Payoff Topology:**\n  $$\\text{Payoff} = \\max\\left(0, \\sum_{i=1}^n w_i S_{i,T} - K\\right) \\quad \\text{or} \\quad \\max\\left(0, S_{1,T} - \\beta S_{2,T} - K\\right)$$\n* **Implied Correlation Edge:** Pricing relies on Margrabe exchange option formulas and copula models to capture non-linear correlation smiles.\n\n#### 2. Practical Application in TradeFlow\n* **Covered Equity-FX Collar:** Fusing Indian large-caps (Reliance/TCS) with USD/INR futures to hedge rupee fluctuations while harvesting option premium.\n* **Delta-Neutral Dispersion:** Fusing long ATM tech calls with short out-of-the-money index puts.` 
+      }
+    ]
+  },
+  {
+    id: 'session-reliance',
+    title: 'Reliance Industries Market Thesis',
+    createdAt: Date.now() - 86400000,
+    messages: [
+      { role: 'user', content: 'What is the current technical and macro outlook for Reliance Industries?' },
+      { 
+        role: 'ai', 
+        content: `### Reliance Industries (RELIANCE.NS) Analysis\n\n* **Capital Expenditure Cycle:** Ongoing transition from legacy refining into green energy gigafactories and 5G enterprise monetization.\n* **Key Multiples:** Trades at resilient EV/EBITDA valuations, with Retail & Jio representing expanding margins.\n* **Actionable Stance:** Core foundational holding for long-term compounders with strong support near institutional 200-day moving averages.` 
+      }
+    ]
+  }
+];
+
+function loadSavedSessions() {
+  try {
+    const raw = localStorage.getItem(AI_SESSIONS_STORAGE_KEY);
+    if (!raw) return INITIAL_SESSIONS;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : INITIAL_SESSIONS;
+  } catch {
+    return INITIAL_SESSIONS;
+  }
+}
+
+function saveSessions(sessions) {
+  try {
+    localStorage.setItem(AI_SESSIONS_STORAGE_KEY, JSON.stringify(sessions));
+  } catch (err) {
+    console.warn('Failed to save AI sessions to localStorage:', err);
+  }
+}
 
 // ─── Animated Semicircle Gauge (Fear / Greed) ────────────────────────────────
 function SentimentGauge({ value, size = 180 }) {
@@ -14,7 +84,6 @@ function SentimentGauge({ value, size = 180 }) {
     const tick = (ts) => {
       if (!startRef.current) startRef.current = ts;
       const p = Math.min((ts - startRef.current) / 500, 1);
-      // ease-out cubic
       setProgress(1 - Math.pow(1 - p, 3));
       if (p < 1) rafRef.current = requestAnimationFrame(tick);
     };
@@ -26,11 +95,9 @@ function SentimentGauge({ value, size = 180 }) {
   const cy = size * 0.75;
   const R = size * 0.4;
   const strokeW = size * 0.12;
-
   const circ = Math.PI * R;
   const drawn = circ * (value / 100) * progress;
 
-  // Color mapping based on value
   const color = value <= 25 ? '#FF4D4D' : value <= 45 ? '#f59e0b' : value <= 55 ? '#9ca3af' : value <= 75 ? '#5DD394' : '#59D4B2';
   const label = value <= 25 ? 'EXTREME FEAR' : value <= 45 ? 'FEAR' : value <= 55 ? 'NEUTRAL' : value <= 75 ? 'GREED' : 'EXTREME GREED';
 
@@ -45,7 +112,6 @@ function SentimentGauge({ value, size = 180 }) {
             <stop offset="100%" stopColor="#59D4B2" />
           </linearGradient>
         </defs>
-        {/* Track */}
         <path
           d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R} ${cy}`}
           fill="none"
@@ -53,7 +119,6 @@ function SentimentGauge({ value, size = 180 }) {
           strokeWidth={strokeW}
           strokeLinecap="round"
         />
-        {/* Value arc */}
         <path
           d={`M ${cx - R} ${cy} A ${R} ${R} 0 0 1 ${cx + R} ${cy}`}
           fill="none"
@@ -63,7 +128,6 @@ function SentimentGauge({ value, size = 180 }) {
           strokeLinecap="round"
           style={{ transition: 'stroke-dasharray 0.1s' }}
         />
-        {/* Indicator dot */}
         {(() => {
           const angle = Math.PI - (Math.PI * (value / 100) * progress);
           const dx = cx + (R - strokeW * 0.5) * Math.cos(angle);
@@ -85,176 +149,434 @@ function SentimentGauge({ value, size = 180 }) {
   );
 }
 
-// ─── Main AI Insights Tab Component ──────────────────────────────────────────
 export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAssetSymbol }) {
+  const [sessions, setSessions] = useState(() => loadSavedSessions());
+  const [activeSessionId, setActiveSessionId] = useState(() => {
+    const list = loadSavedSessions();
+    return list[0]?.id || 'session-fusion';
+  });
   const [chatInput, setChatInput] = useState('');
-  const [activeModel, setActiveModel] = useState('Gemini 3.5 Flash');
-  const [chatHistory, setChatHistory] = useState([
-    { role: 'ai', content: "Hello! I'm your TradeFlow AI assistant, powered by Gemini. Ask me about markets, trading strategies, financial concepts, or rate comparisons." }
-  ]);
+  const [activeModel, setActiveModel] = useState('Gemini 2.5 Flash');
   const [isTyping, setIsTyping] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
+
   const chatEndRef = useRef(null);
+
+  // Sync sessions to localStorage
+  useEffect(() => {
+    saveSessions(sessions);
+  }, [sessions]);
+
+  // Active session
+  const activeSession = sessions.find(s => s.id === activeSessionId) || sessions[0] || {
+    id: 'default',
+    title: 'New Conversation',
+    createdAt: Date.now(),
+    messages: [DEFAULT_WELCOME_MSG]
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatHistory]);
+  }, [activeSession.messages, isTyping]);
 
-  const handleSendChat = async () => {
-    if (!chatInput.trim() || isTyping) return;
-    const userMsg = chatInput.trim();
-    const priorHistory = chatHistory;
-    setChatHistory(prev => [...prev, { role: 'user', content: userMsg }]);
+  const handleCreateNewChat = () => {
+    const newId = `session-${Date.now()}`;
+    const newSession = {
+      id: newId,
+      title: 'New Conversation',
+      createdAt: Date.now(),
+      messages: [DEFAULT_WELCOME_MSG]
+    };
+    setSessions(prev => [newSession, ...prev]);
+    setActiveSessionId(newId);
+  };
+
+  const handleDeleteSession = (e, idToDelete) => {
+    e.stopPropagation();
+    if (sessions.length <= 1) {
+      // Just reset the single session
+      handleCreateNewChat();
+      return;
+    }
+    const filtered = sessions.filter(s => s.id !== idToDelete);
+    setSessions(filtered);
+    if (activeSessionId === idToDelete) {
+      setActiveSessionId(filtered[0]?.id || '');
+    }
+  };
+
+  const handleSendChat = async (overridePrompt) => {
+    const textToSend = typeof overridePrompt === 'string' ? overridePrompt : chatInput;
+    if (!textToSend.trim() || isTyping) return;
+
+    const userMsg = textToSend.trim();
     setChatInput('');
+
+    // Append user message immediately
+    const updatedMessages = [...activeSession.messages, { role: 'user', content: userMsg }];
+    
+    // Auto-update title if it's default
+    let updatedTitle = activeSession.title;
+    if (activeSession.title === 'New Conversation' || activeSession.title === 'TradeFlow AI Conversation') {
+      updatedTitle = userMsg.length > 35 ? `${userMsg.slice(0, 32)}...` : userMsg;
+    }
+
+    setSessions(prev => prev.map(s => {
+      if (s.id === activeSession.id) {
+        return {
+          ...s,
+          title: updatedTitle,
+          messages: updatedMessages
+        };
+      }
+      return s;
+    }));
+
     setIsTyping(true);
+
     try {
       const { generateAIReply, getActiveModelName } = await import('../lib/aiChat');
-      const aiResponse = await generateAIReply(priorHistory, userMsg);
+      const aiResponse = await generateAIReply(updatedMessages, userMsg);
       setActiveModel(getActiveModelName());
-      setChatHistory(prev => [...prev, { role: 'ai', content: aiResponse }]);
+
+      setSessions(prev => prev.map(s => {
+        if (s.id === activeSession.id) {
+          return {
+            ...s,
+            messages: [...s.messages, { role: 'ai', content: aiResponse }]
+          };
+        }
+        return s;
+      }));
     } catch (error) {
       console.error('Gemini request failed:', error);
-      const errorMessage = error?.message || 'I could not reach the AI model. Check your connection or API key and try again.';
-      setChatHistory(prev => [...prev, { role: 'ai', content: errorMessage }]);
+      const errorMessage = error?.message || 'I could not reach the AI model. Check your connection or API key.';
+      setSessions(prev => prev.map(s => {
+        if (s.id === activeSession.id) {
+          return {
+            ...s,
+            messages: [...s.messages, { role: 'ai', content: errorMessage }]
+          };
+        }
+        return s;
+      }));
     } finally {
       setIsTyping(false);
     }
   };
 
-  const aiSignals = [
-    { symbol: 'AAPL', action: 'BUY', confidence: 92, reason: 'RSI oversold (28), strong bullish divergence on 4H chart. Volume increasing on up-ticks.', impact: 'High', type: 'Stock' },
-    { symbol: 'BTC', action: 'STRONG BUY', confidence: 95, reason: 'MACD bullish crossover on daily timeframes. Institutional accumulation patterns detected near $65k support.', impact: 'High', type: 'Crypto' },
-    { symbol: 'EUR/USD', action: 'SELL', confidence: 78, reason: 'Approaching major liquidity sweep resistance at 1.0900. Stochastic overbought.', impact: 'Medium', type: 'Forex' },
-    { symbol: 'NVDA', action: 'HOLD', confidence: 65, reason: 'Consolidating in a tight range. Bollinger bands squeezing, indicating an imminent volatile breakout.', impact: 'Medium', type: 'Stock' }
+  const suggestedPrompts = [
+    'Explain the Fusion option and cross-asset payoff',
+    'Technical setup for Reliance Industries & TCS',
+    'How do SIP rupee-cost averaging returns compound?',
+    'What is Delta, Gamma, Theta in F&O options?'
   ];
 
+  const aiSignals = React.useMemo(() => {
+    if (!watchlist || watchlist.length === 0) return [];
+    return watchlist.slice(0, 4).map(asset => {
+      const isUp = asset.changePercent >= 0;
+      const mag = Math.abs(asset.changePercent);
+      const action = mag > 2 ? (isUp ? 'STRONG BUY' : 'OVERSOLD BUY') : (isUp ? 'BUY' : 'CAUTION / HOLD');
+      const confidence = Math.min(96, Math.max(72, Math.round(75 + mag * 5)));
+      const reason = isUp 
+        ? `Momentum breakout: +${mag.toFixed(2)}% intraday. Bullish moving average alignment with volume accumulation.`
+        : `Mean-reversion setup: Intraday pullback testing psychological support. Volatility contraction detected.`;
+      return {
+        symbol: asset.symbol,
+        action,
+        confidence,
+        reason,
+        impact: mag > 1.5 ? 'High' : 'Medium',
+        type: asset.type
+      };
+    });
+  }, [watchlist]);
+
   const newsFeed = [
-    { source: 'MarketWatch', time: '12m ago', title: 'Tech sector sees unexpected surge in afternoon trading volume.', sentiment: 'Positive' },
-    { source: 'CryptoInsider', time: '45m ago', title: 'Major exchange regulatory concerns spark minor sell-off in altcoins.', sentiment: 'Negative' },
-    { source: 'Fed Update', time: '2h ago', title: 'Interest rates to remain steady, causing bond yields to stabilize.', sentiment: 'Neutral' },
-    { source: 'TradeFlow AI', time: '3h ago', title: 'Unusual options activity detected in TSLA put contracts expiring this Friday.', sentiment: 'Negative' }
+    { source: 'RBI Wire', time: '18m ago', title: 'Monetary Policy Committee holds benchmark Repo Rate at 6.50%; liquidity remains neutral.', sentiment: 'Neutral' },
+    { source: 'NSE Institutional Radar', time: '42m ago', title: 'DII net equity inflows outpace FII derivatives selling across large-cap indices.', sentiment: 'Bullish' },
+    { source: 'Financial Express', time: '1h ago', title: 'Corporate earnings preview: IT & private banking majors report resilient net interest margins.', sentiment: 'Positive' },
+    { source: 'Crypto Desk', time: '3h ago', title: 'Spot Bitcoin reserves on spot order books test multi-week lows as accumulation holds.', sentiment: 'Bullish' }
   ];
 
   return (
     <div className="tab-enter" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%', overflowY: 'auto' }}>
 
-      {/* Top Row: Gauge & AI Chat */}
-      <div style={{ display: 'grid', gridTemplateColumns: '320px 1fr', gap: '20px', minHeight: '380px', flexShrink: 0 }}>
+      {/* Top Main Section: Sentiment Gauge + Claude/ChatGPT Style AI Workspace */}
+      <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '20px', minHeight: '520px', flexShrink: 0 }}>
 
-        {/* Left Col: Sentiment & Model Stats */}
+        {/* Left Column: Market Sentiment & System Status */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div className="glassy-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px', alignSelf: 'flex-start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', alignSelf: 'flex-start' }}>
               <Brain size={18} color="var(--color-teal)" />
               <span style={{ fontFamily: 'var(--font-header)', fontWeight: 800, fontSize: '1.05rem' }}>Market Sentiment</span>
             </div>
-            <SentimentGauge value={72} size={220} />
+            <SentimentGauge value={72} size={210} />
             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', textAlign: 'center', marginTop: '16px', lineHeight: 1.5 }}>
-              Calculated using live order book imbalances, news sentiment NLP, and volatility indices.
+              Aggregated from live order books, institutional block deals & sentiment NLP.
             </p>
           </div>
 
           <div className="glassy-card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
               <Cpu size={18} color="#a855f7" />
-              <span style={{ fontFamily: 'var(--font-header)', fontWeight: 800, fontSize: '0.95rem' }}>Model Status</span>
+              <span style={{ fontFamily: 'var(--font-header)', fontWeight: 800, fontSize: '0.95rem' }}>Active Engine</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
                 <span style={{ color: 'var(--color-text-secondary)' }}>Model</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#fff' }}>{activeModel}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                <span style={{ color: 'var(--color-text-secondary)' }}>Connection</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-jade)', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <RefreshCw size={10} /> On demand
-                </span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Memory</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-jade)' }}>Persistent Storage</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem' }}>
-                <span style={{ color: 'var(--color-text-secondary)' }}>Chat scope</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: '#fff' }}>General purpose</span>
+                <span style={{ color: 'var(--color-text-secondary)' }}>Status</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-teal)' }}>Ready</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Col: AI Chat Interface */}
-        <div className="glassy-card" style={{ display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--color-card-border)', background: 'rgba(0,0,0,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'linear-gradient(135deg, #a855f7, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <MessageSquare size={16} color="#fff" />
+        {/* Right Column: Claude / ChatGPT Style Interface with Left Chats & Tasks Sidebar */}
+        <div className="glassy-card" style={{ display: 'flex', padding: 0, overflow: 'hidden', minHeight: '520px', border: '1px solid var(--color-card-border)' }}>
+          
+          {/* ChatGPT/Claude Session History Sidebar (Flaw 9) */}
+          {showSidebar && (
+            <div style={{ 
+              width: '240px', 
+              borderRight: '1px solid rgba(255,255,255,0.08)', 
+              background: 'rgba(10, 15, 25, 0.7)', 
+              display: 'flex', 
+              flexDirection: 'column',
+              flexShrink: 0
+            }}>
+              {/* + New Chat Button */}
+              <div style={{ padding: '12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <button
+                  onClick={handleCreateNewChat}
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.06)'}
+                >
+                  <Plus size={16} />
+                  <span>+ New Chat</span>
+                </button>
               </div>
-              <div>
-                <p style={{ fontFamily: 'var(--font-header)', fontWeight: 800, fontSize: '0.95rem' }}>TradeFlow AI Assistant</p>
-                <p style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Powered by Gemini</p>
+
+              {/* Chats and tasks Header */}
+              <div style={{ padding: '10px 16px 4px', fontSize: '0.72rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Chats and tasks
+              </div>
+
+              {/* Chat Session List */}
+              <div style={{ flex: 1, overflowY: 'auto', padding: '6px' }}>
+                {sessions.map(s => {
+                  const isActive = s.id === activeSession.id;
+                  return (
+                    <div
+                      key={s.id}
+                      onClick={() => setActiveSessionId(s.id)}
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: '6px',
+                        marginBottom: '4px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        background: isActive ? 'rgba(13, 242, 201, 0.12)' : 'transparent',
+                        color: isActive ? '#fff' : 'var(--color-text-secondary)',
+                        borderLeft: isActive ? '3px solid var(--color-teal)' : '3px solid transparent',
+                        fontSize: '0.8rem',
+                        transition: 'background 0.15s'
+                      }}
+                      onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
+                      onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
+                        <MessageSquare size={13} style={{ flexShrink: 0, color: isActive ? 'var(--color-teal)' : 'var(--color-text-muted)' }} />
+                        <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {s.title}
+                        </span>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteSession(e, s.id)}
+                        title="Delete chat"
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--color-text-muted)',
+                          padding: '2px',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          opacity: isActive ? 1 : 0.4
+                        }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Bottom storage note */}
+              <div style={{ padding: '8px 12px', borderTop: '1px solid rgba(255,255,255,0.06)', fontSize: '0.7rem', color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={12} /> Auto-preserved across tabs
               </div>
             </div>
-            <span className="badge-interactive" style={{ background: 'rgba(13,242,201,0.1)', color: 'var(--color-teal)' }}>On demand</span>
-          </div>
+          )}
 
-          {/* Chat Messages */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {chatHistory.map((msg, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
-                <div style={{
-                  maxWidth: '80%',
-                  padding: '12px 16px',
-                  borderRadius: '12px',
-                  borderBottomRightRadius: msg.role === 'user' ? '4px' : '12px',
-                  borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '12px',
-                  background: msg.role === 'user' ? 'var(--color-teal)' : 'rgba(255,255,255,0.05)',
-                  color: msg.role === 'user' ? '#000' : '#fff',
-                  border: msg.role === 'ai' ? '1px solid var(--color-card-border)' : 'none',
-                  fontSize: '0.85rem',
-                  lineHeight: 1.5,
-                  whiteSpace: 'pre-wrap'
-                }}>
-                  {msg.content}{msg.link && <> <a href={msg.link} target="_blank" rel="noreferrer" style={{ color: 'var(--color-teal)' }}>Open Firebase AI Logic setup</a></>}
+          {/* Active Chat Main Panel */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            {/* Header */}
+            <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--color-card-border)', background: 'rgba(0,0,0,0.25)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button
+                  onClick={() => setShowSidebar(!showSidebar)}
+                  title="Toggle chats sidebar"
+                  style={{ background: 'none', border: 'none', color: 'var(--color-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                >
+                  {showSidebar ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+                </button>
+
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'linear-gradient(135deg, #a855f7, #3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Sparkles size={14} color="#fff" />
                 </div>
-                <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '4px', padding: '0 4px' }}>
-                  {msg.role === 'user' ? 'You' : 'Gemini AI'}
-                </span>
-              </div>
-            ))}
-            {isTyping && (
-              <div style={{ display: 'flex', alignItems: 'flex-start' }}>
-                <div style={{ padding: '12px 16px', borderRadius: '12px', borderBottomLeftRadius: '4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-card-border)', display: 'flex', gap: '4px' }}>
-                  <span style={{ animation: 'shimmer 1s infinite', width: '6px', height: '6px', background: 'var(--color-teal)', borderRadius: '50%' }}></span>
-                  <span style={{ animation: 'shimmer 1s infinite 0.2s', width: '6px', height: '6px', background: 'var(--color-teal)', borderRadius: '50%' }}></span>
-                  <span style={{ animation: 'shimmer 1s infinite 0.4s', width: '6px', height: '6px', background: 'var(--color-teal)', borderRadius: '50%' }}></span>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '0.9rem', color: '#fff', fontWeight: 800 }}>{activeSession.title}</h4>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>{activeModel}</span>
                 </div>
               </div>
-            )}
-            <div ref={chatEndRef} />
-          </div>
 
-          {/* Chat Input */}
-          <div style={{ padding: '16px', borderTop: '1px solid var(--color-card-border)', background: 'rgba(0,0,0,0.2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-card-border)', borderRadius: '12px', padding: '4px 8px 4px 16px' }}>
-              <input
-                type="text"
-                placeholder="Ask about AAPL technicals, portfolio strategy..."
-                value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSendChat()}
-                style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '0.9rem', outline: 'none', padding: '10px 0' }}
-              />
-              <button
-                onClick={handleSendChat}
-                style={{ background: chatInput.trim() ? 'var(--color-teal)' : 'rgba(255,255,255,0.1)', color: chatInput.trim() ? '#000' : 'var(--color-text-muted)', border: 'none', width: '36px', height: '36px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: chatInput.trim() ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}
-              >
-                <Send size={16} />
-              </button>
+              <span className="badge-interactive" style={{ background: 'rgba(13,242,201,0.1)', color: 'var(--color-teal)', fontSize: '0.72rem' }}>
+                Active Session
+              </span>
+            </div>
+
+            {/* Chat Messages Stream */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {activeSession.messages.map((msg, i) => (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  <div style={{
+                    maxWidth: '85%',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    borderBottomRightRadius: msg.role === 'user' ? '4px' : '12px',
+                    borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '12px',
+                    background: msg.role === 'user' ? 'var(--color-teal)' : 'rgba(255,255,255,0.05)',
+                    color: msg.role === 'user' ? '#000' : '#fff',
+                    border: msg.role === 'ai' ? '1px solid var(--color-card-border)' : 'none',
+                    fontSize: '0.85rem',
+                    lineHeight: 1.6,
+                    whiteSpace: 'pre-wrap',
+                    boxShadow: msg.role === 'user' ? '0 2px 10px rgba(13,242,201,0.2)' : 'none'
+                  }}>
+                    {msg.content}
+                  </div>
+                  <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '4px', padding: '0 4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    {msg.role === 'user' ? <UserIcon size={10} /> : <Bot size={10} />}
+                    {msg.role === 'user' ? 'You' : activeModel}
+                  </span>
+                </div>
+              ))}
+
+              {isTyping && (
+                <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+                  <div style={{ padding: '12px 16px', borderRadius: '12px', borderBottomLeftRadius: '4px', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--color-card-border)', display: 'flex', gap: '4px' }}>
+                    <span style={{ animation: 'shimmer 1s infinite', width: '6px', height: '6px', background: 'var(--color-teal)', borderRadius: '50%' }}></span>
+                    <span style={{ animation: 'shimmer 1s infinite 0.2s', width: '6px', height: '6px', background: 'var(--color-teal)', borderRadius: '50%' }}></span>
+                    <span style={{ animation: 'shimmer 1s infinite 0.4s', width: '6px', height: '6px', background: 'var(--color-teal)', borderRadius: '50%' }}></span>
+                  </div>
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Quick Suggested Prompt Chips */}
+            <div style={{ padding: '8px 16px', display: 'flex', gap: '8px', overflowX: 'auto', background: 'rgba(0,0,0,0.1)' }}>
+              {suggestedPrompts.map((p, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSendChat(p)}
+                  style={{
+                    padding: '4px 10px',
+                    borderRadius: '20px',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    color: 'var(--color-text-secondary)',
+                    fontSize: '0.73rem',
+                    whiteSpace: 'nowrap',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color = '#fff'; e.currentTarget.style.borderColor = 'var(--color-teal)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.color = 'var(--color-text-secondary)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+
+            {/* Bottom Input Field */}
+            <div style={{ padding: '14px 16px', borderTop: '1px solid var(--color-card-border)', background: 'rgba(0,0,0,0.2)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--color-card-border)', borderRadius: '12px', padding: '4px 8px 4px 16px' }}>
+                <input
+                  type="text"
+                  placeholder="Ask about fusion options, market technicals, portfolio strategy..."
+                  value={chatInput}
+                  onChange={e => setChatInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSendChat()}
+                  style={{ flex: 1, background: 'transparent', border: 'none', color: '#fff', fontSize: '0.88rem', outline: 'none', padding: '10px 0' }}
+                />
+                <button
+                  onClick={() => handleSendChat()}
+                  disabled={!chatInput.trim() || isTyping}
+                  style={{
+                    background: chatInput.trim() ? 'var(--color-teal)' : 'rgba(255,255,255,0.1)',
+                    color: chatInput.trim() ? '#000' : 'var(--color-text-muted)',
+                    border: 'none',
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: chatInput.trim() && !isTyping ? 'pointer' : 'not-allowed',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <Send size={16} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* Bottom Row: AI Signals & News */}
+      {/* Bottom Row: AI Signals & News Feed */}
       <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '20px', flexShrink: 0 }}>
-
-        {/* AI Actionable Signals */}
+        {/* Actionable Signals */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Activity size={16} color="var(--color-jade)" />
@@ -291,7 +613,7 @@ export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAsse
           </div>
         </div>
 
-        {/* News Feed with Sentiment Pills */}
+        {/* Sentiment News Feed */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Newspaper size={16} color="var(--color-text-primary)" />
@@ -319,12 +641,12 @@ export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAsse
                     {news.title}
                   </h4>
                 </div>
-              )
+              );
             })}
           </div>
         </div>
-
       </div>
+
     </div>
   );
 }

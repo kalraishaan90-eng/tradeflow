@@ -68,32 +68,38 @@ export default function FAQTab() {
     }
   };
 
-  const handleAskQuestion = () => {
-    if (!customQuestion.trim()) return;
+  const handleAskQuestion = async () => {
+    if (!customQuestion.trim() || isAsking) return;
+    const query = customQuestion.trim();
     setIsAsking(true);
     setCustomAnswer('');
     
-    setTimeout(() => {
-      const q = customQuestion.toLowerCase();
-      let answer = '';
-      
+    try {
+      const { generateAIReply } = await import('../lib/aiChat.js');
+      const response = await generateAIReply([], `Answer this user question about TradeFlow Simulator or financial markets directly and authoritatively in 2-4 punchy sentences with no preamble: ${query}`);
+      setCustomAnswer(response);
+    } catch (err) {
+      console.warn("AI answering error:", err);
+      // Smart contextual fallback without AI slop
+      const q = query.toLowerCase();
+      let fallback = '';
       if (q.includes('fee') || q.includes('cost') || q.includes('charge')) {
-        answer = 'TradeFlow Simulator is completely free to use! There are no fees, commissions, or hidden charges. All trades are executed with virtual money, so you can practice without any financial risk.';
-      } else if (q.includes('real money') || q.includes('live') || q.includes('actual')) {
-        answer = 'No, TradeFlow is a paper trading simulator only. You cannot trade with real money on this platform. It is designed purely for learning and practicing trading strategies with virtual funds.';
-      } else if (q.includes('api') || q.includes('data') || q.includes('price')) {
-        answer = 'We use live market data from public financial APIs (Yahoo Finance). When API limits are reached, the system seamlessly falls back to a realistic simulated price engine so your experience is never interrupted.';
-      } else if (q.includes('mobile') || q.includes('phone') || q.includes('app')) {
-        answer = 'TradeFlow is a progressive web app that works on any device with a browser. While there is no native mobile app yet, the web interface is fully responsive and optimized for mobile use.';
-      } else if (q.includes('delete') || q.includes('account') || q.includes('remove')) {
-        answer = 'To reset your account, go to Settings > System Settings > Reset Simulator. This will clear all positions, orders, and reset your balance to ₹80,00,000. For complete account deletion, please contact support.';
+        fallback = 'TradeFlow is completely free and non-commercial. All executions use virtual simulated cash (₹80,00,000 baseline) with 0 commissions or hidden fees.';
+      } else if (q.includes('real money') || q.includes('deposit') || q.includes('withdraw')) {
+        fallback = 'TradeFlow is strictly a high-fidelity paper trading simulator. You cannot deposit, trade, or withdraw real currency; it is designed purely for risk-free strategy validation and educational competitions.';
+      } else if (q.includes('price') || q.includes('data') || q.includes('live')) {
+        fallback = 'Prices track real-time market data across NSE Indian equities, major crypto pairs, and currency crosses, backed by dynamic micro-tick simulation during off-market hours.';
+      } else if (q.includes('f&o') || q.includes('option') || q.includes('kyc')) {
+        fallback = 'Derivatives trading requires completing the quick 30-second simulated KYC risk profile in Settings or via 1-click Express Mode in the F&O tab.';
+      } else if (q.includes('leaderboard') || q.includes('rank')) {
+        fallback = 'The Global Leaderboard ranks all traders by verified Net Worth (Cash + Open Holdings Value). Depositing extra simulator cash marks the account ineligible for public competitive ranking.';
       } else {
-        answer = `Great question! While I don't have a specific answer for "${customQuestion}" in my knowledge base, I recommend checking the FAQ categories above or reaching out to the TradeFlow community. You can also explore the AI Insights and Dictionary tabs for comprehensive market learning.`;
+        fallback = `TradeFlow provides simulated paper trading across Indian stocks, crypto, forex, mutual funds, and F&O. Explore the Finance Hub Dictionary, Market Wire, and AI Insights for deeper technical guidance.`;
       }
-      
-      setCustomAnswer(answer);
+      setCustomAnswer(fallback);
+    } finally {
       setIsAsking(false);
-    }, 1500);
+    }
   };
 
   return (

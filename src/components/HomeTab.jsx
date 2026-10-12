@@ -11,7 +11,9 @@ import {
   Newspaper,
   Award,
   Headphones,
-  Users2,
+  Lock,
+  Unlock,
+  Zap,
   Sparkles,
   Calculator,
   ArrowRight,
@@ -57,9 +59,11 @@ export default function HomeTab({
   watchlist, 
   setActiveTab, 
   setSelectedAssetSymbol,
-  depositSimulatedCash
+  depositSimulatedCash,
+  userPlan = 'free',
+  onOpenUpgradeModal
 }) {
-  const [depositAmount, setDepositAmount] = useState(10000);
+  const [depositAmount, setDepositAmount] = useState(50000);
 
   // Compute portfolio metrics
   const totalPositionsValue = portfolio.positions.reduce((acc, pos) => {
@@ -73,9 +77,17 @@ export default function HomeTab({
   const todayPnLPercent = portfolio.todayPnLPercent;
   const isPositive = todayPnL >= 0;
 
+  const isPremiumUnlocked = userPlan === 'pro' || userPlan === 'max';
+
   const handleDeposit = () => {
-    depositSimulatedCash(Number(depositAmount));
-    alert(`Successfully deposited virtual ₹${Number(depositAmount).toLocaleString('en-IN')}!`);
+    if (!isPremiumUnlocked) {
+      if (onOpenUpgradeModal) onOpenUpgradeModal();
+      return;
+    }
+    const deposited = depositSimulatedCash(Number(depositAmount));
+    if (deposited) {
+      alert(`Successfully injected virtual ₹${Number(deposited).toLocaleString('en-IN')}!`);
+    }
   };
 
   return (
@@ -131,50 +143,100 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* Deposit Cash Widget */}
+        {/* Additional Money Sheet Widget (Flaw 4 & 5: Premium-locked) */}
         <div className="glassy-card hover-glow" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
-            <h3 style={{ fontFamily: 'var(--font-header)', fontSize: '1.2rem', marginBottom: '8px', fontWeight: '800', color: '#fff' }}>
-              Simulator Tools
-            </h3>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.85rem', marginBottom: '20px' }}>
-              Top up your virtual account or trade assets on the market tab instantly.
-            </p>
-            
-            <div className="form-group" style={{ marginBottom: '16px' }}>
-              <label>ADD SIMULATED CASH (₹)</label>
-              <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
-                <input 
-                  type="number" 
-                  className="form-input" 
-                  value={depositAmount} 
-                  onChange={(e) => setDepositAmount(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <button className="trade-btn primary-btn" onClick={handleDeposit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Plus size={16} /> Deposit
-                </button>
-              </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ fontFamily: 'var(--font-header)', fontSize: '1.15rem', margin: 0, fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isPremiumUnlocked ? <Unlock size={18} style={{ color: 'var(--color-jade)' }} /> : <Lock size={18} style={{ color: '#f87171' }} />}
+                Additional Money Sheet
+              </h3>
+              <span style={{ 
+                fontSize: '0.68rem', 
+                padding: '2px 8px', 
+                borderRadius: '4px', 
+                background: isPremiumUnlocked ? 'rgba(93,211,148,0.15)' : 'rgba(248,113,113,0.15)', 
+                color: isPremiumUnlocked ? 'var(--color-jade)' : '#f87171', 
+                fontWeight: 800,
+                textTransform: 'uppercase'
+              }}>
+                {isPremiumUnlocked ? `${userPlan.toUpperCase()} UNLOCKED ✓` : 'PRO / MAX LOCKED'}
+              </span>
             </div>
+
+            {isPremiumUnlocked ? (
+              <>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.82rem', marginBottom: '16px' }}>
+                  {userPlan.toUpperCase()} Privilege Active: Top up your practice capital directly into your simulated wallet.
+                </p>
+                <div className="form-group" style={{ marginBottom: '16px' }}>
+                  <label>ADD SIMULATED CASH (₹)</label>
+                  <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                    <input 
+                      type="number" 
+                      className="form-input" 
+                      value={depositAmount} 
+                      onChange={(e) => setDepositAmount(e.target.value)}
+                      style={{ flex: 1 }}
+                      min="1000"
+                      max={userPlan === 'max' ? 50000000 : 20000000}
+                    />
+                    <button className="trade-btn primary-btn hover-glow" onClick={handleDeposit} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <Plus size={16} /> Inject Cash
+                    </button>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.82rem', marginBottom: '14px', lineHeight: 1.5 }}>
+                  Injecting custom virtual cash is exclusive to <strong>TradeFlow Pro & Max</strong>. Free plans stay at starting ₹80 Lakhs for ranked integrity.
+                </p>
+                <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 700, marginBottom: '2px' }}>
+                    <Sparkles size={14} /> Buy Pro / Max to Unlock Capital Injection
+                  </div>
+                  <p style={{ fontSize: '0.74rem', color: 'var(--color-text-secondary)', margin: 0 }}>
+                    Unlock custom deposit limits up to ₹2 Crore (Pro) or ₹5 Crore (Max).
+                  </p>
+                </div>
+              </>
+            )}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="trade-btn secondary-btn hover-glow" onClick={() => { setSelectedAssetSymbol('BTC'); setActiveTab('market'); }} style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            {!isPremiumUnlocked ? (
+              <button 
+                className="trade-btn primary-btn hover-glow" 
+                onClick={onOpenUpgradeModal} 
+                style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 800 }}
+              >
+                <Zap size={15} /> Buy Pro / Max Plan
+              </button>
+            ) : (
+              <button 
+                className="trade-btn secondary-btn" 
+                onClick={onOpenUpgradeModal} 
+                style={{ flex: 1, fontSize: '0.8rem' }}
+              >
+                Manage Membership
+              </button>
+            )}
+            <button className="trade-btn secondary-btn" onClick={() => { setSelectedAssetSymbol('BTC'); setActiveTab('market'); }} style={{ flex: 1 }}>
               Trade Markets
             </button>
           </div>
         </div>
       </div>
 
-      {/* Quick Access Feature Hub (Investopedia Features Integration) */}
+      {/* Quick Access Feature Hub (Commerce Club Intelligence) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
         {[
-          { id: 'dictionary', label: 'Financial Dictionary', desc: 'A–Z terms, formulas & concepts', icon: BookOpen, color: 'var(--color-jade)' },
-          { id: 'banking-rates', label: 'Banking & Yields', desc: 'Compare HYSA, CDs & calculators', icon: Building2, color: 'var(--color-teal)' },
-          { id: 'news', label: 'Market Wire News', desc: 'Live breaking stories & analysis', icon: Newspaper, color: '#60a5fa' },
-          { id: 'reviews', label: 'Product Reviews', desc: 'Best brokers, crypto & robos', icon: Award, color: '#f59e0b' },
-          { id: 'wealth', label: 'Wealth & Podcast', desc: 'TradeFlow Express & debt planner', icon: Headphones, color: '#a78bfa' },
-          { id: 'advisors', label: 'Advisor Council', desc: 'CFP & CFA market insights', icon: Users2, color: 'var(--color-jade)' },
+          { id: 'finance-hub', label: 'Financial Dictionary', desc: 'Unlimited A–Z terms, formulas & AI lookup', icon: BookOpen, color: 'var(--color-jade)' },
+          { id: 'finance-hub', label: 'Market Wire News', desc: 'Live breaking macroeconomic & corporate stories', icon: Newspaper, color: '#60a5fa' },
+          { id: 'finance-hub', label: 'Wealth & Strategy', desc: 'Debt avalanche planner & audio briefings', icon: Headphones, color: '#a78bfa' },
+          { id: 'finance-hub', label: 'Why TradeFlow?', desc: 'How we differ from Zerodha, TradingView & others', icon: Sparkles, color: '#f59e0b' },
+          { id: 'banking-rates', label: 'Banking & Yields', desc: 'RBI repo, FDs, yields & compound calculators', icon: Building2, color: 'var(--color-teal)' },
         ].map(item => {
           const Icon = item.icon;
           return (
@@ -255,31 +317,31 @@ export default function HomeTab({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>Marcus Online Savings (HYSA)</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>No lock-in • Daily compounding</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>RBI Policy Repo Rate</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Central Bank Benchmark • Neutral Stance</div>
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-jade)', fontSize: '1.1rem' }}>
-                  5.15% APY
+                  6.50% p.a.
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>Barclays 6-Month Term CD</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Fixed deposit • Rate lock guarantee</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>HDFC / SBI 1-Year Term FD</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Fixed Deposit • Guaranteed Yield</div>
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-jade)', fontSize: '1.1rem' }}>
-                  5.30% APY
+                  7.30% p.a.
                 </div>
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>30-Year Fixed Mortgage Benchmark</div>
-                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Conforming rate average</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>10-Year Indian Benchmark Sovereign G-Sec</div>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Sovereign Risk-Free Benchmark Yield</div>
                 </div>
-                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-rose)', fontSize: '1.1rem' }}>
-                  6.42% APR
+                <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-teal)', fontSize: '1.1rem' }}>
+                  6.95% Yield
                 </div>
               </div>
             </div>

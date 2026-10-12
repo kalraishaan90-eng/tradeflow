@@ -91,7 +91,7 @@ function SwipeableOrderRow({ order, onCancel, formatCurrency }) {
   );
 }
 
-export default function OrdersTab({ portfolio, watchlist, cancelOrder }) {
+export default function OrdersTab({ portfolio, watchlist, cancelOrder, executeTrade }) {
   const { orders, orderHistory, positions = [] } = portfolio;
   const [activeSubTab, setActiveSubTab] = useState('positions');
   const [sortBy, setSortBy] = useState('pnl');
@@ -209,6 +209,7 @@ export default function OrdersTab({ portfolio, watchlist, cancelOrder }) {
                     <th className="text-right">Value</th>
                     <th className="text-right">P&amp;L</th>
                     <th className="text-right">%</th>
+                    <th className="text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -248,10 +249,35 @@ export default function OrdersTab({ portfolio, watchlist, cancelOrder }) {
                               {Math.abs(pos.pnlPercent).toFixed(2)}%
                             </div>
                           </td>
+                          <td className="text-right" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              className="trade-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (executeTrade) {
+                                  if (window.confirm(`Sell all ${pos.shares} shares of ${pos.symbol} at simulated market price ₹${pos.currentPrice.toFixed(2)}?`)) {
+                                    executeTrade(pos.symbol, 'SELL', pos.shares, pos.currentPrice, 'Market');
+                                  }
+                                }
+                              }}
+                              style={{
+                                padding: '4px 10px',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                background: 'rgba(255, 77, 77, 0.15)',
+                                color: 'var(--color-rose)',
+                                border: '1px solid rgba(255, 77, 77, 0.3)',
+                                borderRadius: '6px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Exit / Sell
+                            </button>
+                          </td>
                         </tr>
                         {isExpanded && (
                           <tr className="positions-row-expanded">
-                            <td colSpan={7}>
+                            <td colSpan={8}>
                               <div className="expanded-pos-details">
                                 <div className="exp-stat">
                                   <span>Cost Basis</span>

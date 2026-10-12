@@ -136,8 +136,50 @@ function generateExpiries() {
   return expiries;
 }
 
-export default function FOTab({ kycCompleted, watchlist, portfolio, executeTrade, setActiveTab }) {
+export default function FOTab({ kycCompleted, setKycCompleted, watchlist, portfolio, executeTrade, setActiveTab }) {
   const [selectedAsset, setSelectedAsset] = useState('BTC');
+
+  // Fast 1-click unlock handler for commerce session
+  const handleExpressUnlock = () => {
+    if (setKycCompleted) {
+      setKycCompleted(true);
+    }
+  };
+
+  // Render Lock screen if KYC not done
+  if (!kycCompleted) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+        <div className="glassy-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', maxWidth: '480px', textAlign: 'center', padding: '40px' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255, 77, 77, 0.1)', color: '#ff4d4d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <ShieldAlert size={36} />
+          </div>
+          <div>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '20px' }}>F&amp;O Trading Locked</h3>
+            <p style={{ color: 'var(--color-text-secondary)', fontSize: '13px', marginTop: '8px', lineHeight: 1.6 }}>
+              Derivatives simulation requires risk verification. You can take the 3-step questionnaire or unlock instantly for classroom demonstrations.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}>
+            <button 
+              className="trade-btn buy-btn" 
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontWeight: '600' }} 
+              onClick={handleExpressUnlock}
+            >
+              <Zap size={16} /> Instant 1-Click Express Unlock
+            </button>
+            <button 
+              className="trade-btn secondary-btn hover-glow" 
+              style={{ width: '100%' }} 
+              onClick={() => setActiveTab('settings')}
+            >
+              Go to KYC Questionnaire
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   const [selectedExpiry, setSelectedExpiry] = useState(null);
   const [selectedStrike, setSelectedStrike] = useState(null);
   const [selectedOptionType, setSelectedOptionType] = useState('CALL');
@@ -188,27 +230,7 @@ export default function FOTab({ kycCompleted, watchlist, portfolio, executeTrade
     }
   };
 
-  // Render Lock screen if KYC not done
-  if (!kycCompleted) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
-        <div className="glassy-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', maxWidth: '450px', textAlign: 'center', padding: '40px' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255, 77, 77, 0.1)', color: '#ff4d4d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ShieldAlert size={36} />
-          </div>
-          <div>
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '20px' }}>F&amp;O Trading Locked</h3>
-            <p style={{ color: 'var(--color-text-secondary)', fontSize: '13px', marginTop: '8px', lineHeight: 1.6 }}>
-              Complete the simulator trading quiz in your Profile to unlock derivatives trading.
-            </p>
-          </div>
-          <button className="trade-btn buy-btn" style={{ width: '100%' }} onClick={() => setActiveTab('settings')}>
-            Go to KYC Questionnaire
-          </button>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="fo-layout">
