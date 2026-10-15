@@ -45,7 +45,7 @@ const MiniCandleChart = ({ data }) => {
             y={top}
             width={candleWidth * 0.8}
             height={height}
-            fill={isUp ? 'var(--color-jade, #5DD394)' : 'var(--color-rose, #FF4D4D)'}
+            fill={isUp ? 'var(--color-bullish, #34C759)' : 'var(--color-bearish, #FF453A)'}
             rx={1}
           />
         );
@@ -106,15 +106,15 @@ export default function HomeTab({
                 {isPositive ? '+' : ''}{todayPnLPercent.toFixed(2)}%
               </span>
             </div>
-            <h2 className="portfolio-value mono-text" style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-1px', color: '#fff' }}>
+            <h2 className="portfolio-value mono-text" style={{ fontSize: '2.5rem', fontWeight: '800', letterSpacing: '-1px', color: 'var(--color-text-primary)' }}>
               ₹{netWorth.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </h2>
             <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '0.85rem' }}>
               <span style={{ color: 'var(--color-text-muted)' }}>
-                Cash: <span className="mono-text" style={{ color: '#fff', fontWeight: '600' }}>₹{portfolio.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                Cash: <span className="mono-text" style={{ color: 'var(--color-text-primary)', fontWeight: '600' }}>₹{portfolio.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </span>
               <span style={{ color: 'var(--color-text-muted)' }}>
-                Holdings Value: <span className="mono-text" style={{ color: '#fff', fontWeight: '600' }}>₹{totalPositionsValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                Holdings Value: <span className="mono-text" style={{ color: 'var(--color-text-primary)', fontWeight: '600' }}>₹{totalPositionsValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
               </span>
             </div>
           </div>
@@ -143,20 +143,20 @@ export default function HomeTab({
           </div>
         </div>
 
-        {/* Additional Money Sheet Widget (Flaw 4 & 5: Premium-locked) */}
+        {/* Additional Money Sheet Widget (Premium-locked) */}
         <div className="glassy-card hover-glow" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <h3 style={{ fontFamily: 'var(--font-header)', fontSize: '1.15rem', margin: 0, fontWeight: '800', color: '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {isPremiumUnlocked ? <Unlock size={18} style={{ color: 'var(--color-jade)' }} /> : <Lock size={18} style={{ color: '#f87171' }} />}
+              <h3 style={{ fontFamily: 'var(--font-header)', fontSize: '1.15rem', margin: 0, fontWeight: '800', color: 'var(--color-text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {isPremiumUnlocked ? <Unlock size={18} style={{ color: 'var(--color-jade)' }} /> : <Lock size={18} style={{ color: 'var(--color-dutch-white)' }} />}
                 Additional Money Sheet
               </h3>
               <span style={{ 
                 fontSize: '0.68rem', 
                 padding: '2px 8px', 
                 borderRadius: '4px', 
-                background: isPremiumUnlocked ? 'rgba(93,211,148,0.15)' : 'rgba(248,113,113,0.15)', 
-                color: isPremiumUnlocked ? 'var(--color-jade)' : '#f87171', 
+                background: isPremiumUnlocked ? 'rgba(128,174,232,0.18)' : 'rgba(243,236,224,0.1)', 
+                color: isPremiumUnlocked ? 'var(--color-jade)' : 'var(--color-dutch-white)', 
                 fontWeight: 800,
                 textTransform: 'uppercase'
               }}>
@@ -192,8 +192,8 @@ export default function HomeTab({
                 <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.82rem', marginBottom: '14px', lineHeight: 1.5 }}>
                   Injecting custom virtual cash is exclusive to <strong>TradeFlow Pro & Max</strong>. Free plans stay at starting ₹80 Lakhs for ranked integrity.
                 </p>
-                <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.25)', marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontSize: '0.8rem', fontWeight: 700, marginBottom: '2px' }}>
+                <div style={{ padding: '12px 14px', borderRadius: '8px', background: 'rgba(229, 220, 183, 0.08)', border: '1px solid rgba(229, 220, 183, 0.25)', marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--color-dutch-white)', fontSize: '0.8rem', fontWeight: 700, marginBottom: '2px' }}>
                     <Sparkles size={14} /> Buy Pro / Max to Unlock Capital Injection
                   </div>
                   <p style={{ fontSize: '0.74rem', color: 'var(--color-text-secondary)', margin: 0 }}>
@@ -233,10 +233,10 @@ export default function HomeTab({
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
         {[
           { id: 'finance-hub', label: 'Financial Dictionary', desc: 'Unlimited A–Z terms, formulas & AI lookup', icon: BookOpen, color: 'var(--color-jade)' },
-          { id: 'finance-hub', label: 'Market Wire News', desc: 'Live breaking macroeconomic & corporate stories', icon: Newspaper, color: '#60a5fa' },
-          { id: 'finance-hub', label: 'Wealth & Strategy', desc: 'Debt avalanche planner & audio briefings', icon: Headphones, color: '#a78bfa' },
-          { id: 'finance-hub', label: 'Why TradeFlow?', desc: 'How we differ from Zerodha, TradingView & others', icon: Sparkles, color: '#f59e0b' },
-          { id: 'banking-rates', label: 'Banking & Yields', desc: 'RBI repo, FDs, yields & compound calculators', icon: Building2, color: 'var(--color-teal)' },
+          { id: 'finance-hub', label: 'Market Wire News', desc: 'Live breaking macroeconomic & corporate stories', icon: Newspaper, color: 'var(--color-dutch-white)' },
+          { id: 'finance-hub', label: 'Wealth & Strategy', desc: 'Debt avalanche planner & audio briefings', icon: Headphones, color: 'var(--color-teal)' },
+          { id: 'finance-hub', label: 'Why TradeFlow?', desc: 'How we differ from Zerodha, TradingView & others', icon: Sparkles, color: 'var(--color-mint)' },
+          { id: 'banking-rates', label: 'Banking & Yields', desc: 'RBI repo, FDs, yields & compound calculators', icon: Building2, color: 'var(--color-jade)' },
         ].map(item => {
           const Icon = item.icon;
           return (
@@ -258,7 +258,7 @@ export default function HomeTab({
               <div style={{ width: '36px', height: '36px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.color }}>
                 <Icon size={20} />
               </div>
-              <h4 style={{ fontSize: '0.95rem', color: '#fff', margin: 0, fontWeight: 700 }}>{item.label}</h4>
+              <h4 style={{ fontSize: '0.95rem', color: 'var(--color-text-primary)', margin: 0, fontWeight: 700 }}>{item.label}</h4>
               <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4 }}>{item.desc}</p>
             </div>
           );
@@ -275,12 +275,12 @@ export default function HomeTab({
               <span style={{ fontSize: '0.75rem', color: 'var(--color-jade)', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Sparkles size={14} /> FINANCIAL TERM OF THE DAY
               </span>
-              <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(54, 124, 91, 0.2)', color: 'var(--color-jade)', fontWeight: 600 }}>
+              <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(128, 174, 232, 0.15)', color: 'var(--palette-cool-horizon)', fontWeight: 700 }}>
                 Investing
               </span>
             </div>
 
-            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', color: '#fff', margin: '2px 0 8px' }}>
+            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', color: 'var(--color-text-primary)', margin: '2px 0 8px' }}>
               Sharpe Ratio
             </h3>
 
@@ -288,15 +288,15 @@ export default function HomeTab({
               A measure of risk-adjusted return developed by Nobel laureate William F. Sharpe. It measures the excess return generated by an asset per unit of volatility endured.
             </p>
 
-            <div style={{ padding: '10px 14px', background: 'rgba(0,0,0,0.3)', borderRadius: '8px', borderLeft: '3px solid var(--color-jade)', marginBottom: '16px' }}>
-              <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--color-jade)', fontWeight: 700 }}>
+            <div style={{ padding: '10px 14px', background: 'rgba(128, 174, 232, 0.1)', borderRadius: '8px', borderLeft: '3px solid var(--palette-cool-horizon)', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-mono)', color: 'var(--palette-cool-horizon)', fontWeight: 700 }}>
                 Sharpe Ratio = (R_p - R_f) / σ_p
               </span>
             </div>
           </div>
 
           <button 
-            className="trade-btn secondary-btn hover-glow"
+            className="trade-btn secondary-btn hover-glow" 
             onClick={() => setActiveTab('dictionary')}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '0.85rem' }}
           >
@@ -315,9 +315,9 @@ export default function HomeTab({
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>RBI Policy Repo Rate</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>RBI Policy Repo Rate</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Central Bank Benchmark • Neutral Stance</div>
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-jade)', fontSize: '1.1rem' }}>
@@ -325,9 +325,9 @@ export default function HomeTab({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>HDFC / SBI 1-Year Term FD</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>HDFC / SBI 1-Year Term FD</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Fixed Deposit • Guaranteed Yield</div>
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-jade)', fontSize: '1.1rem' }}>
@@ -335,9 +335,9 @@ export default function HomeTab({
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff' }}>10-Year Indian Benchmark Sovereign G-Sec</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>10-Year Indian Benchmark Sovereign G-Sec</div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)' }}>Sovereign Risk-Free Benchmark Yield</div>
                 </div>
                 <div style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, color: 'var(--color-teal)', fontSize: '1.1rem' }}>
@@ -393,7 +393,7 @@ export default function HomeTab({
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <div>
-                    <div className="stock-symbol" style={{ fontWeight: '700', fontSize: '1rem', color: '#fff' }}>{asset.symbol}</div>
+                    <div className="stock-symbol" style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--color-text-primary)' }}>{asset.symbol}</div>
                     <div className="stock-name" style={{ color: 'var(--color-text-secondary)', fontSize: '0.75rem' }}>{asset.name}</div>
                   </div>
                   <span className={`change-badge ${isAssetPositive ? 'positive' : 'negative'}`} style={{ padding: '2px 6px', fontSize: '0.75rem' }}>
@@ -402,7 +402,7 @@ export default function HomeTab({
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="mono-text" style={{ fontWeight: '700', fontSize: '1.1rem', color: '#fff' }}>
+                  <span className="mono-text" style={{ fontWeight: '700', fontSize: '1.1rem', color: 'var(--color-text-primary)' }}>
                     ₹{asset.price.toLocaleString('en-IN', { minimumFractionDigits: asset.type === 'Forex' ? 4 : 2 })}
                   </span>
                   

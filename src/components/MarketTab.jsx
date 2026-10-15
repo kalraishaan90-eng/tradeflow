@@ -84,7 +84,7 @@ export default function MarketTab({
   const [sortBy, setSortBy] = useState('gainers'); // 'gainers', 'losers', 'volume'
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedSymbol, setExpandedSymbol] = useState('RELIANCE.NS'); // default expand first
-  const [chartTimeframe, setChartTimeframe] = useState('1mo'); // '1d' | '5d' | '1mo' | '6mo' | '1y' | 'max'
+  const [chartTimeframe, setChartTimeframe] = useState('3mo'); // '1d' | '5d' | '1mo' | '3mo' | '6mo' | '1y' | 'max'
   
   // Market quotes prices in component state
   const [prices, setPrices] = useState(() => {
@@ -214,17 +214,20 @@ export default function MarketTab({
   const loadDeepChart = async (symbol, range) => {
     setLoadingCharts(prev => ({ ...prev, [symbol]: true }));
     try {
-      const ohlc = await fetchYahooChart(symbol, '15m', range);
+      const ohlc = await fetchYahooChart(symbol, range);
       if (ohlc && ohlc.length >= 5) {
         setHistoricalData(prev => ({ ...prev, [symbol]: ohlc }));
       } else {
-        // Fallback to high-density 120-bar generator
         const base = prices[symbol]?.price || 100;
-        setHistoricalData(prev => ({ ...prev, [symbol]: generateMockOHLC(base, 120, 900) }));
+        const count = range === '1d' ? 78 : range === '5d' ? 120 : range === '1mo' ? 30 : range === '3mo' ? 85 : range === '6mo' ? 130 : 250;
+        const intervalSec = (range === '1d' || range === '5d') ? 900 : 86400;
+        setHistoricalData(prev => ({ ...prev, [symbol]: generateMockOHLC(base, count, intervalSec) }));
       }
     } catch (err) {
       const base = prices[symbol]?.price || 100;
-      setHistoricalData(prev => ({ ...prev, [symbol]: generateMockOHLC(base, 120, 900) }));
+      const count = range === '1d' ? 78 : range === '5d' ? 120 : range === '1mo' ? 30 : range === '3mo' ? 85 : range === '6mo' ? 130 : 250;
+      const intervalSec = (range === '1d' || range === '5d') ? 900 : 86400;
+      setHistoricalData(prev => ({ ...prev, [symbol]: generateMockOHLC(base, count, intervalSec) }));
     } finally {
       setLoadingCharts(prev => ({ ...prev, [symbol]: false }));
     }
@@ -240,9 +243,7 @@ export default function MarketTab({
     if (setSelectedAssetSymbol) {
       setSelectedAssetSymbol(mapToSimSymbol(symbol));
     }
-    if (!historicalData[symbol]) {
-      loadDeepChart(symbol, chartTimeframe);
-    }
+    loadDeepChart(symbol, chartTimeframe);
   };
 
   // Timeframe change handler
@@ -330,6 +331,7 @@ export default function MarketTab({
     { key: '1d', label: '1D' },
     { key: '5d', label: '5D' },
     { key: '1mo', label: '1M' },
+    { key: '3mo', label: '3M' },
     { key: '6mo', label: '6M' },
     { key: '1y', label: '1Y' },
     { key: 'max', label: 'MAX' },
@@ -344,21 +346,23 @@ export default function MarketTab({
           top: '24px',
           right: '24px',
           zIndex: 9999,
-          background: 'linear-gradient(135deg, #0f172a, #1e293b)',
-          border: '1px solid var(--color-teal)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.8), 0 0 20px rgba(13,242,201,0.2)',
-          borderRadius: '12px',
+          background: 'rgba(24, 24, 29, 0.92)',
+          backdropFilter: 'blur(28px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+          border: '1px solid rgba(243, 236, 224, 0.15)',
+          boxShadow: '0 16px 40px rgba(0,0,0,0.65), 0 0 24px rgba(128, 174, 232, 0.15), inset 0 1px 0 rgba(255,255,255,0.12)',
+          borderRadius: '9999px',
           padding: '14px 20px',
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
           animation: 'fadeIn 0.2s ease-out'
         }}>
-          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: tradeToast.side === 'BUY' ? 'rgba(93,211,148,0.2)' : 'rgba(255,77,77,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Check size={18} color={tradeToast.side === 'BUY' ? 'var(--color-jade)' : '#f87171'} />
+          <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: tradeToast.side === 'BUY' ? 'rgba(46, 75, 47, 0.35)' : 'rgba(91, 0, 21, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Check size={18} color={tradeToast.side === 'BUY' ? 'var(--color-jade)' : 'var(--color-rose)'} />
           </div>
           <div>
-            <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#fff' }}>
+            <div style={{ fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>
               Simulated {tradeToast.side} Filled!
             </div>
             <div style={{ fontSize: '0.78rem', color: 'var(--color-text-secondary)', marginTop: '2px' }}>
@@ -520,7 +524,7 @@ export default function MarketTab({
                             setOrderSide('SELL');
                             if (!isExpanded) toggleRow(asset.symbol);
                           }}
-                          style={{ padding: '5px 12px', fontSize: '0.75rem', fontWeight: 800, background: 'rgba(255, 77, 77, 0.15)', color: 'var(--color-rose)', border: '1px solid rgba(255, 77, 77, 0.3)' }}
+                          style={{ padding: '5px 12px', fontSize: '0.75rem', fontWeight: 800, background: 'rgba(91, 0, 21, 0.35)', color: '#FF6B6B', border: '1px solid rgba(255, 69, 58, 0.35)', borderRadius: '6px' }}
                         >
                           SELL
                         </button>
@@ -531,9 +535,9 @@ export default function MarketTab({
                     </div>
                   </div>
 
-                  {/* UNIFIED PRO TRADING TERMINAL: GRAPH + BUYING STATION SIDE-BY-SIDE (Flaw 3 & 6) */}
+                  {/* UNIFIED PRO TRADING TERMINAL: GRAPH + BUYING STATION SIDE-BY-SIDE */}
                   {isExpanded && (
-                    <div className="market-row-expanded" style={{ padding: '16px', background: 'rgba(10, 15, 26, 0.95)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                    <div className="market-row-expanded" style={{ padding: '20px', background: 'var(--color-surface)', borderTop: '1px solid var(--color-border)' }}>
                       <div style={{ 
                         display: 'grid', 
                         gridTemplateColumns: 'minmax(0, 1.8fr) minmax(330px, 1fr)', 
@@ -548,15 +552,15 @@ export default function MarketTab({
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '10px' }}>
                             <div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: '#fff' }}>
+                                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                                   {asset.name}
                                 </h3>
-                                <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.06)', color: 'var(--color-teal)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
+                                <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: '4px', background: 'rgba(128, 174, 232, 0.14)', color: 'var(--palette-cool-horizon)', fontFamily: 'var(--font-mono)', fontWeight: 700 }}>
                                   {asset.symbol}
                                 </span>
                               </div>
                               <div style={{ display: 'flex', gap: '12px', marginTop: '4px', fontSize: '0.8rem' }}>
-                                <span className="mono-text" style={{ fontSize: '1.1rem', fontWeight: 800, color: '#fff' }}>
+                                <span className="mono-text" style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                                   ₹{asset.price.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </span>
                                 <span className={`change-badge ${badgeClass}`} style={{ fontSize: '0.75rem', padding: '1px 6px' }}>
@@ -565,8 +569,8 @@ export default function MarketTab({
                               </div>
                             </div>
 
-                            {/* Max Range Timeframe Selector (Flaw 6: loads full historical depth) */}
-                            <div style={{ display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.04)', padding: '3px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            {/* Max Range Timeframe Selector */}
+                            <div style={{ display: 'flex', gap: '4px', background: 'var(--color-bg)', padding: '3px', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
                               {timeframes.map(tf => (
                                 <button
                                   key={tf.key}
@@ -575,9 +579,9 @@ export default function MarketTab({
                                     padding: '4px 8px',
                                     borderRadius: '6px',
                                     border: 'none',
-                                    background: chartTimeframe === tf.key ? 'var(--color-teal)' : 'transparent',
-                                    color: chartTimeframe === tf.key ? '#000' : 'var(--color-text-secondary)',
-                                    fontWeight: 800,
+                                    background: chartTimeframe === tf.key ? 'var(--color-accent)' : 'transparent',
+                                    color: chartTimeframe === tf.key ? '#FFFFFF' : 'var(--color-text-secondary)',
+                                    fontWeight: 700,
                                     fontSize: '0.72rem',
                                     cursor: 'pointer',
                                     transition: 'all 0.15s'
@@ -591,26 +595,26 @@ export default function MarketTab({
 
                           {/* Stat Pills Strip */}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(95px, 1fr))', gap: '8px', marginBottom: '12px' }}>
-                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                               <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', display: 'block' }}>24h High</span>
-                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>₹{asset.high?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>₹{asset.high?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                               <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', display: 'block' }}>24h Low</span>
-                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>₹{asset.low?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>₹{asset.low?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                               <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', display: 'block' }}>Prev Close</span>
-                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>₹{asset.prevClose?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>₹{asset.prevClose?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                             </div>
-                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.04)' }}>
+                            <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
                               <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', display: 'block' }}>Volume</span>
-                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: '#fff' }}>{asset.volume}</span>
+                              <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>{asset.volume}</span>
                             </div>
                             {heldShares > 0 && (
-                              <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'rgba(93,211,148,0.08)', border: '1px solid rgba(93,211,148,0.2)' }}>
-                                <span style={{ fontSize: '0.68rem', color: 'var(--color-jade)', display: 'block' }}>Holding P&L</span>
-                                <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: positionPnL >= 0 ? 'var(--color-jade)' : '#f87171' }}>
+                              <div style={{ padding: '8px 10px', borderRadius: '8px', background: 'var(--color-bullish-subtle)', border: '1px solid var(--color-bullish)' }}>
+                                <span style={{ fontSize: '0.68rem', color: 'var(--color-bullish)', display: 'block' }}>Holding P&L</span>
+                                <span className="mono-text" style={{ fontSize: '0.82rem', fontWeight: 700, color: positionPnL >= 0 ? 'var(--color-bullish)' : 'var(--color-bearish)' }}>
                                   {positionPnL >= 0 ? '+' : ''}₹{positionPnL.toFixed(2)}
                                 </span>
                               </div>
@@ -618,39 +622,41 @@ export default function MarketTab({
                           </div>
 
                           {/* Candlestick Canvas Container */}
-                          <div style={{ flex: 1, minHeight: '360px', width: '100%', borderRadius: '10px', overflow: 'hidden', background: '#090d16', border: '1px solid rgba(255,255,255,0.08)', position: 'relative', padding: '10px' }}>
+                          <div style={{ flex: 1, minHeight: '440px', width: '100%', borderRadius: '12px', overflow: 'hidden', background: 'var(--color-surface)', border: '1px solid var(--color-border)', position: 'relative', padding: '12px', boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.02)' }}>
                             {chartData.length > 0 ? (
-                              <Suspense fallback={<div style={{ display: 'grid', placeItems: 'center', height: '340px', color: 'var(--color-text-muted)' }}>Mounting Candlesticks…</div>}>
+                              <Suspense fallback={<div style={{ display: 'grid', placeItems: 'center', height: '420px', color: 'var(--color-text-muted)' }}>Mounting Candlesticks…</div>}>
                                 <CandlestickChart data={chartData} />
                               </Suspense>
                             ) : isLoadingChart ? (
-                              <div style={{ display: 'grid', placeItems: 'center', height: '340px', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
+                              <div style={{ display: 'grid', placeItems: 'center', height: '420px', color: 'var(--color-text-secondary)', fontSize: '0.85rem' }}>
                                 <Loader size={20} className="fa-spin" style={{ color: 'var(--color-teal)' }} /> Loading maximum historical bars…
                               </div>
                             ) : (
-                              <div style={{ display: 'grid', placeItems: 'center', height: '340px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+                              <div style={{ display: 'grid', placeItems: 'center', height: '420px', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
                                 Real-time chart syncing…
                               </div>
                             )}
                           </div>
                         </div>
 
-                        {/* ================= RIGHT: FUTURISTIC BUY/SELL TERMINAL (Flaw 3) ================= */}
+                        {/* ================= RIGHT: BUY/SELL TERMINAL ================= */}
                         <div style={{
-                          background: 'linear-gradient(145deg, #0e1626, #090e18)',
-                          border: orderSide === 'BUY' ? '1px solid rgba(13, 242, 201, 0.4)' : '1px solid rgba(255, 77, 77, 0.4)',
-                          borderRadius: '12px',
+                          background: 'var(--color-surface)',
+                          backdropFilter: 'blur(20px)',
+                          WebkitBackdropFilter: 'blur(20px)',
+                          border: orderSide === 'BUY' ? '1px solid rgba(46, 75, 47, 0.3)' : '1px solid rgba(91, 0, 21, 0.3)',
+                          borderRadius: '16px',
                           padding: '18px',
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'space-between',
-                          boxShadow: orderSide === 'BUY' ? '0 10px 30px rgba(13, 242, 201, 0.08)' : '0 10px 30px rgba(255, 77, 77, 0.08)',
+                          boxShadow: orderSide === 'BUY' ? '0 10px 30px rgba(46, 75, 47, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)' : '0 10px 30px rgba(91, 0, 21, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                           transition: 'border 0.2s, box-shadow 0.2s'
                         }}>
                           <div>
                             {/* Terminal Top Badge */}
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                              <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: orderSide === 'BUY' ? 'var(--color-teal)' : 'var(--color-rose)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                              <span style={{ fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.8px', color: orderSide === 'BUY' ? 'var(--color-bullish)' : 'var(--color-bearish)', display: 'flex', alignItems: 'center', gap: '5px' }}>
                                 <Zap size={14} /> Live Order Execution
                               </span>
                               <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}>
@@ -658,8 +664,8 @@ export default function MarketTab({
                               </span>
                             </div>
 
-                            {/* Neon BUY / SELL Toggle Switches */}
-                            <div style={{ display: 'flex', gap: '8px', padding: '4px', background: 'rgba(0,0,0,0.3)', borderRadius: '10px', marginBottom: '16px' }}>
+                            {/* BUY / SELL Toggle Switches */}
+                            <div style={{ display: 'flex', gap: '8px', padding: '4px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '10px', marginBottom: '16px' }}>
                               <button
                                 type="button"
                                 onClick={() => setOrderSide('BUY')}
@@ -672,9 +678,9 @@ export default function MarketTab({
                                   fontWeight: 800,
                                   fontSize: '0.85rem',
                                   letterSpacing: '0.5px',
-                                  background: orderSide === 'BUY' ? 'linear-gradient(135deg, var(--color-teal), #059669)' : 'transparent',
-                                  color: orderSide === 'BUY' ? '#000' : 'var(--color-text-muted)',
-                                  boxShadow: orderSide === 'BUY' ? '0 0 15px rgba(13, 242, 201, 0.4)' : 'none',
+                                  background: orderSide === 'BUY' ? 'linear-gradient(135deg, var(--color-bullish-dark), var(--color-bullish))' : 'transparent',
+                                  color: orderSide === 'BUY' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                                  boxShadow: orderSide === 'BUY' ? '0 4px 14px rgba(46, 75, 47, 0.25)' : 'none',
                                   transition: 'all 0.2s'
                                 }}
                               >
@@ -692,9 +698,9 @@ export default function MarketTab({
                                   fontWeight: 800,
                                   fontSize: '0.85rem',
                                   letterSpacing: '0.5px',
-                                  background: orderSide === 'SELL' ? 'linear-gradient(135deg, #ef4444, #b91c1c)' : 'transparent',
-                                  color: orderSide === 'SELL' ? '#fff' : 'var(--color-text-muted)',
-                                  boxShadow: orderSide === 'SELL' ? '0 0 15px rgba(239, 68, 68, 0.4)' : 'none',
+                                  background: orderSide === 'SELL' ? 'linear-gradient(135deg, var(--palette-deep-cabernet), var(--palette-night-bordeaux))' : 'transparent',
+                                  color: orderSide === 'SELL' ? '#FFFFFF' : 'var(--color-text-secondary)',
+                                  boxShadow: orderSide === 'SELL' ? '0 4px 14px rgba(91, 0, 21, 0.25)' : 'none',
                                   transition: 'all 0.2s'
                                 }}
                               >
@@ -716,9 +722,9 @@ export default function MarketTab({
                                     padding: '7px',
                                     borderRadius: '6px',
                                     border: '1px solid',
-                                    borderColor: orderStyle === 'Market' ? 'var(--color-teal)' : 'rgba(255,255,255,0.08)',
-                                    background: orderStyle === 'Market' ? 'rgba(13,242,201,0.1)' : 'rgba(255,255,255,0.02)',
-                                    color: orderStyle === 'Market' ? '#fff' : 'var(--color-text-muted)',
+                                    borderColor: orderStyle === 'Market' ? 'var(--color-accent)' : 'var(--color-border)',
+                                    background: orderStyle === 'Market' ? 'var(--color-accent-subtle)' : 'var(--color-bg)',
+                                    color: orderStyle === 'Market' ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                                     fontSize: '0.78rem',
                                     fontWeight: 700,
                                     cursor: 'pointer'
@@ -737,9 +743,9 @@ export default function MarketTab({
                                     padding: '7px',
                                     borderRadius: '6px',
                                     border: '1px solid',
-                                    borderColor: orderStyle === 'Limit' ? 'var(--color-teal)' : 'rgba(255,255,255,0.08)',
-                                    background: orderStyle === 'Limit' ? 'rgba(13,242,201,0.1)' : 'rgba(255,255,255,0.02)',
-                                    color: orderStyle === 'Limit' ? '#fff' : 'var(--color-text-muted)',
+                                    borderColor: orderStyle === 'Limit' ? 'var(--color-accent)' : 'var(--color-border)',
+                                    background: orderStyle === 'Limit' ? 'var(--color-accent-subtle)' : 'var(--color-bg)',
+                                    color: orderStyle === 'Limit' ? 'var(--color-accent)' : 'var(--color-text-secondary)',
                                     fontSize: '0.78rem',
                                     fontWeight: 700,
                                     cursor: 'pointer'
@@ -776,7 +782,7 @@ export default function MarketTab({
                                 </label>
                                 {orderSide === 'SELL' && (
                                   <span style={{ fontSize: '0.72rem', color: 'var(--color-text-secondary)' }}>
-                                    Held: <strong style={{ color: '#fff' }}>{heldShares}</strong>
+                                    Held: <strong style={{ color: 'var(--color-text-primary)' }}>{heldShares}</strong>
                                   </span>
                                 )}
                               </div>
@@ -801,9 +807,9 @@ export default function MarketTab({
                                       flex: 1,
                                       padding: '4px',
                                       borderRadius: '6px',
-                                      background: 'rgba(255,255,255,0.05)',
-                                      border: '1px solid rgba(255,255,255,0.08)',
-                                      color: 'var(--color-text-secondary)',
+                                      background: 'var(--color-bg)',
+                                      border: '1px solid var(--color-border)',
+                                      color: 'var(--color-text-primary)',
                                       fontSize: '0.72rem',
                                       fontWeight: 700,
                                       cursor: 'pointer'
@@ -826,9 +832,9 @@ export default function MarketTab({
                                     flex: 1.2,
                                     padding: '4px',
                                     borderRadius: '6px',
-                                    background: 'rgba(13,242,201,0.1)',
-                                    border: '1px solid rgba(13,242,201,0.3)',
-                                    color: 'var(--color-teal)',
+                                    background: 'var(--color-accent-subtle)',
+                                    border: '1px solid var(--color-accent)',
+                                    color: 'var(--color-accent)',
                                     fontSize: '0.72rem',
                                     fontWeight: 800,
                                     cursor: 'pointer'
@@ -841,30 +847,30 @@ export default function MarketTab({
 
                             {/* Warning for SELL when 0 shares held */}
                             {orderSide === 'SELL' && heldShares <= 0 && (
-                              <div style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255,77,77,0.1)', border: '1px solid rgba(255,77,77,0.25)', color: '#f87171', fontSize: '0.75rem', marginBottom: '12px', lineHeight: 1.4 }}>
+                              <div style={{ padding: '10px', borderRadius: '8px', background: 'var(--color-bearish-subtle)', border: '1px solid var(--color-bearish)', color: 'var(--color-bearish)', fontSize: '0.75rem', marginBottom: '12px', lineHeight: 1.4 }}>
                                 You currently hold 0 shares of {simSymbol}. Switch to BUY mode to take a position.
                               </div>
                             )}
 
                             {/* Live Financial Breakdown */}
-                            <div style={{ padding: '12px', borderRadius: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem' }}>
+                            <div style={{ padding: '12px', borderRadius: '10px', background: 'var(--color-bg)', border: '1px solid var(--color-border)', marginBottom: '16px', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.78rem' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-secondary)' }}>
                                 <span>Execution Unit Price:</span>
-                                <span className="mono-text" style={{ color: '#fff', fontWeight: 600 }}>₹{effPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                <span className="mono-text" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>₹{effPrice.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--color-text-secondary)' }}>
                                 <span>Simulated Available Cash:</span>
-                                <span className="mono-text" style={{ color: '#fff', fontWeight: 600 }}>₹{portfolio.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                <span className="mono-text" style={{ color: 'var(--color-text-primary)', fontWeight: 600 }}>₹{portfolio.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
                               </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed rgba(255,255,255,0.08)', paddingTop: '8px', fontWeight: 800 }}>
-                                <span style={{ color: '#fff' }}>{orderSide === 'BUY' ? 'Total Required Outlay:' : 'Estimated Proceeds:'}</span>
-                                <span className="mono-text" style={{ color: orderSide === 'BUY' ? 'var(--color-teal)' : 'var(--color-jade)', fontSize: '0.95rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px dashed var(--color-border)', paddingTop: '8px', fontWeight: 800 }}>
+                                <span style={{ color: 'var(--color-text-primary)' }}>{orderSide === 'BUY' ? 'Total Required Outlay:' : 'Estimated Proceeds:'}</span>
+                                <span className="mono-text" style={{ color: orderSide === 'BUY' ? 'var(--color-bullish)' : 'var(--color-accent)', fontSize: '0.95rem' }}>
                                   ₹{currentTotalCost.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </span>
                               </div>
                               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>
                                 <span>Projected Post-Trade Balance:</span>
-                                <span className="mono-text" style={{ color: projectedBalance < 0 ? '#f87171' : 'var(--color-text-secondary)' }}>
+                                <span className="mono-text" style={{ color: projectedBalance < 0 ? 'var(--color-bearish)' : 'var(--color-text-primary)' }}>
                                   ₹{projectedBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                 </span>
                               </div>
@@ -888,15 +894,16 @@ export default function MarketTab({
                               cursor: (orderSide === 'SELL' ? (heldShares < Number(sharesInput) || Number(sharesInput) <= 0) : (currentTotalCost > portfolio.balance || Number(sharesInput) <= 0)) ? 'not-allowed' : 'pointer',
                               opacity: (orderSide === 'SELL' ? (heldShares < Number(sharesInput) || Number(sharesInput) <= 0) : (currentTotalCost > portfolio.balance || Number(sharesInput) <= 0)) ? 0.45 : 1,
                               background: orderSide === 'BUY' 
-                                ? 'linear-gradient(135deg, var(--color-teal), #059669)' 
-                                : 'linear-gradient(135deg, #ef4444, #991b1b)',
-                              color: orderSide === 'BUY' ? '#000' : '#fff',
+                                ? 'linear-gradient(135deg, var(--palette-evergreen-forest), #34C759)' 
+                                : 'linear-gradient(135deg, var(--palette-deep-cabernet), var(--palette-night-bordeaux))',
+                              color: '#FFFFFF',
                               fontWeight: 800,
                               fontSize: '0.9rem',
                               letterSpacing: '0.5px',
+                              borderRadius: '12px',
                               boxShadow: orderSide === 'BUY' 
-                                ? '0 4px 20px rgba(13, 242, 201, 0.4)' 
-                                : '0 4px 20px rgba(239, 68, 68, 0.4)',
+                                ? '0 4px 20px rgba(52, 199, 89, 0.4), inset 0 1px 0 rgba(255,255,255,0.15)' 
+                                : '0 4px 20px rgba(91, 0, 21, 0.5), inset 0 1px 0 rgba(255,255,255,0.15)',
                               transition: 'all 0.2s'
                             }}
                           >

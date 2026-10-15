@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>TradeFlow — Advanced Trading Simulator & Financial Intelligence</title>
     <meta name="description" content="Trade stocks, forex, crypto, F&O, banking comparisons and financial dictionary with ₹80,00,000 in virtual cash. Live market data, AI insights, Investopedia-grade education — zero real money.">
-    <meta name="theme-color" content="#0B0E0D">
+    <meta name="theme-color" content="#F6EEE1">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -31,15 +31,14 @@
 
     <style>
       /* Pre-React loading fallback so first paint is on-brand */
-      html, body { margin: 0; background: #000; }
+      html, body { margin: 0; background: #F6EEE1; color: #121214; }
       #root:empty::after {
         content: "";
         position: fixed; inset: 0;
-        background: radial-gradient(circle at 50% 45%, #367C5B 0%, transparent 60%),
-                    radial-gradient(circle at 50% 45%, rgba(93,211,148,.25) 0%, transparent 40%);
+        background: radial-gradient(circle at 50% 45%, #FFFFFF 0%, #F6EEE1 65%);
         animation: boot-pulse 1.4s ease-in-out infinite;
       }
-      @keyframes boot-pulse { 0%,100% { opacity: .25 } 50% { opacity: .7 } }
+      @keyframes boot-pulse { 0%,100% { opacity: .3 } 50% { opacity: .8 } }
     </style>
 </head>
 <body>

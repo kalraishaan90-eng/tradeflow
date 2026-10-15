@@ -97,8 +97,8 @@ export default function AuthScreen({ onGoogleSignIn, onGitHubSignIn, onContinueA
 
         {/* Footer */}
         <div className="auth-footer">
-          <div style={{ padding: '12px', background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.2)', borderRadius: '8px', marginBottom: '16px' }}>
-            <p style={{ color: '#ff4d4d', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
+          <div style={{ padding: '12px', background: 'rgba(229, 220, 183, 0.08)', border: '1px solid rgba(229, 220, 183, 0.2)', borderRadius: '8px', marginBottom: '16px' }}>
+            <p style={{ color: 'var(--color-dutch-white)', fontSize: '12px', lineHeight: 1.5, margin: 0 }}>
               <strong>Disclaimer:</strong> TradeFlow is a paper-trading simulator and educational intelligence platform. No real money is involved, and trades are strictly simulated.
             </p>
           </div>

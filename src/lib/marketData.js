@@ -90,7 +90,7 @@ export function formatVolume(val) {
 async function fetchWithProxyFallback(yahooPath) {
   // 1. Try local Vite dev proxy first
   try {
-    const res = await fetch(`/api/yahoo${yahooPath}`, { cache: 'no-store' });
+    const res = await fetch(`/api/yahoo${yahooPath}`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
     if (res.ok) {
       return await res.json();
     }
@@ -98,7 +98,7 @@ async function fetchWithProxyFallback(yahooPath) {
     // Continue to external proxies
   }
 
-  // 2. Try external proxies
+  // 2. Try external proxies with fast timeouts
   const directUrl = `https://query1.finance.yahoo.com${yahooPath}`;
   const externalProxies = [
     `https://corsproxy.io/?${encodeURIComponent(directUrl)}`,
@@ -107,7 +107,7 @@ async function fetchWithProxyFallback(yahooPath) {
 
   for (const proxyUrl of externalProxies) {
     try {
-      const res = await fetch(proxyUrl, { cache: 'no-store' });
+      const res = await fetch(proxyUrl, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
       if (res.ok) {
         return await res.json();
       }
@@ -160,22 +160,29 @@ export async function fetchYahooQuotes(symbols) {
 }
 
 // ─── Yahoo Chart History (OHLC) ─────────────────────────────────────
-export async function fetchYahooChart(symbol, interval = '15m', range = '1mo') {
+export async function fetchYahooChart(symbol, range = '3mo', interval = null) {
   try {
-    // Determine appropriate interval based on range
+    const yahooSym = YAHOO_MAP[symbol] || symbol;
+
+    // Professional timeframe-to-interval mapping matching Yahoo Finance & TradingView
     let queryInterval = interval;
-    if (range === '1y' || range === 'max') {
-      queryInterval = '1d';
-    } else if (range === '3mo' || range === '6mo') {
-      queryInterval = '1h';
+    if (!queryInterval) {
+      if (range === '1d') queryInterval = '5m';
+      else if (range === '5d') queryInterval = '15m';
+      else if (range === '1mo') queryInterval = '1d';
+      else if (range === '3mo') queryInterval = '1d';
+      else if (range === '6mo') queryInterval = '1d';
+      else if (range === '1y') queryInterval = '1d';
+      else if (range === 'max') queryInterval = '1wk';
+      else queryInterval = '1d';
     }
 
-    let data = await fetchWithProxyFallback(`/v8/finance/chart/${symbol}?interval=${queryInterval}&range=${range}`);
+    let data = await fetchWithProxyFallback(`/v8/finance/chart/${yahooSym}?interval=${queryInterval}&range=${range}`);
     let result = data?.chart?.result?.[0];
 
-    // If no timestamps, fallback to 1y / 5d
+    // If no timestamps, fallback to 1y with 1d interval
     if (!result?.timestamp || result.timestamp.length === 0) {
-      data = await fetchWithProxyFallback(`/v8/finance/chart/${symbol}?interval=1d&range=1y`);
+      data = await fetchWithProxyFallback(`/v8/finance/chart/${yahooSym}?interval=1d&range=1y`);
       result = data?.chart?.result?.[0];
     }
 
@@ -193,17 +200,26 @@ export async function fetchYahooChart(symbol, interval = '15m', range = '1mo') {
         quote.low[i] != null &&
         quote.close[i] != null
       ) {
+        const rawOpen = quote.open[i];
+        const rawHigh = quote.high[i];
+        const rawLow = quote.low[i];
+        const rawClose = quote.close[i];
+
+        // Dynamic precision preserving micro-cap crypto (ADA, XRP) and forex pips
+        const ref = rawClose || rawOpen;
+        const decimals = ref < 1 ? 4 : ref < 10 ? 3 : 2;
+
         validBars.push({
           time: timestamp[i],
-          open: parseFloat(quote.open[i].toFixed(2)),
-          high: parseFloat(quote.high[i].toFixed(2)),
-          low: parseFloat(quote.low[i].toFixed(2)),
-          close: parseFloat(quote.close[i].toFixed(2)),
+          open: Number(rawOpen.toFixed(decimals)),
+          high: Number(rawHigh.toFixed(decimals)),
+          low: Number(rawLow.toFixed(decimals)),
+          close: Number(rawClose.toFixed(decimals)),
         });
       }
     }
 
-    // Return all valid bars without arbitrary 40-candle limitation
+    // Return the complete real-time dataset for the requested timeframe
     return validBars.length > 0 ? validBars : null;
   } catch (e) {
     console.warn('Yahoo chart fetch failed:', e.message);
@@ -292,26 +308,42 @@ export function mockTick(current, type = 'Stock') {
   return current * (1 + change);
 }
 
-// ─── Generate realistic mock OHLC fallback aligned to session ─────────
-export function generateMockOHLC(basePrice, count = 100, intervalSec = 900) {
+export function generateMockOHLC(basePrice, count = 40, intervalSec = 900) {
   const points = [];
-  // Use last closed session time or recent hour
   const now = Math.floor(Date.now() / 1000);
-  let currentPrice = basePrice * 0.99;
+  const decimals = basePrice < 1 ? 4 : basePrice < 10 ? 3 : 2;
+
+  // Realistic market volatility depending on asset tier
+  const volFactor = basePrice < 1 ? 0.016 : basePrice < 50 ? 0.009 : 0.005;
+  let currentPrice = basePrice * (0.98 + (Math.random() - 0.5) * 0.02);
+
   for (let i = 0; i < count; i++) {
     const time = now - (count - i) * intervalSec;
-    const target = basePrice;
-    currentPrice += (target - currentPrice) * 0.15 + (Math.random() - 0.49) * (basePrice * 0.003);
+    // Mean-reversion pull towards current basePrice so mock data stays anchored to live price
+    const pull = (basePrice - currentPrice) * 0.08;
+    const step = (Math.random() - 0.49) * (basePrice * volFactor);
+    currentPrice += pull + step;
+
     const open = currentPrice;
-    const close = open + (Math.random() - 0.5) * (basePrice * 0.002);
-    const high = Math.max(open, close) + Math.random() * (basePrice * 0.0015);
-    const low = Math.min(open, close) - Math.random() * (basePrice * 0.0015);
+    // Minimum candle height so candles never collapse into zero-thickness flat lines
+    const minHeight = Math.max(Math.pow(10, -decimals), basePrice * 0.001);
+    const bodyDelta = (Math.random() - 0.49) * (basePrice * volFactor * 0.95);
+    const close = Math.abs(bodyDelta) < minHeight 
+      ? open + (bodyDelta >= 0 ? minHeight : -minHeight)
+      : open + bodyDelta;
+
+    const wickTop = Math.random() * (basePrice * volFactor * 0.5) + minHeight * 0.5;
+    const wickBottom = Math.random() * (basePrice * volFactor * 0.5) + minHeight * 0.5;
+
+    const high = Math.max(open, close) + wickTop;
+    const low = Math.max(0.0001, Math.min(open, close) - wickBottom);
+
     points.push({ 
       time, 
-      open: parseFloat(open.toFixed(2)), 
-      high: parseFloat(high.toFixed(2)), 
-      low: parseFloat(low.toFixed(2)), 
-      close: parseFloat(close.toFixed(2)) 
+      open: Number(open.toFixed(decimals)), 
+      high: Number(high.toFixed(decimals)), 
+      low: Number(low.toFixed(decimals)), 
+      close: Number(close.toFixed(decimals)) 
     });
     currentPrice = close;
   }

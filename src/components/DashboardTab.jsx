@@ -4,8 +4,8 @@ import { formatINR } from '../lib/format.mjs';
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 const SECTOR_COLORS = [
-  '#59D4B2', '#5DD394', '#a855f7', '#3b82f6',
-  '#f59e0b', '#FF4D4D', '#10b981', '#ec4899'
+  '#80AEE8', '#2E4B2F', '#5B0015', '#F3ECE0',
+  '#A68B91', '#34C759', '#4A1521', '#F6EEE1'
 ];
 
 function fmt(val) {
@@ -123,8 +123,8 @@ function BarChart({ bars, height = 160, label = 'P&L' }) {
                 borderRadius: '3px',
                 background: isPos
                   ? 'linear-gradient(90deg, var(--color-teal), var(--color-jade))'
-                  : 'linear-gradient(90deg, #FF4D4D, #b91c1c)',
-                boxShadow: isPos ? '0 0 8px rgba(0,230,118,0.3)' : '0 0 8px rgba(239,68,68,0.3)',
+                  : 'linear-gradient(90deg, var(--color-poppy), var(--color-falu-red))',
+                boxShadow: isPos ? '0 0 10px rgba(52,199,89,0.35)' : '0 0 10px rgba(255,69,58,0.35)',
                 transition: 'width 0.1s',
               }} />
             </div>
@@ -161,8 +161,8 @@ function WinRateRing({ percent, size = 140 }) {
   const r = size * 0.36;
   const circ = 2 * Math.PI * r;
   const drawn = circ * (percent / 100) * progress;
-  const color = percent >= 60 ? '#5DD394' : percent >= 40 ? '#f59e0b' : '#FF4D4D';
-  const glow = percent >= 60 ? 'rgba(0,230,118,0.4)' : percent >= 40 ? 'rgba(245,158,11,0.4)' : 'rgba(239,68,68,0.4)';
+  const color = percent >= 60 ? 'var(--color-asparagus)' : percent >= 40 ? 'var(--color-dutch-white)' : 'var(--color-poppy)';
+  const glow = percent >= 60 ? 'rgba(52,199,89,0.4)' : percent >= 40 ? 'rgba(243,236,224,0.3)' : 'rgba(255,69,58,0.4)';
 
   return (
     <svg width={size} height={size} style={{ overflow: 'visible' }}>
@@ -251,8 +251,8 @@ export default function DashboardTab({ portfolio, watchlist = [] }) {
   const statsCards = [
     { label: 'Cash Balance', val: fmt(portfolio.balance), color: 'var(--color-teal)', icon: <Wallet size={16} />, border: 'var(--color-teal)' },
     { label: 'Total P&L', val: `${portfolio.totalPnL >= 0 ? '+' : ''}${fmt(portfolio.totalPnL)}`, color: portfolio.totalPnL >= 0 ? 'var(--color-jade)' : 'var(--color-red)', icon: <Percent size={16} />, border: portfolio.totalPnL >= 0 ? 'var(--color-jade)' : 'var(--color-red)' },
-    { label: 'Active Positions', val: portfolio.positions.length, color: '#a855f7', icon: <TrendingUp size={16} />, border: '#a855f7' },
-    { label: 'Total Trades', val: totalTrades, color: '#f59e0b', icon: <BarChart2 size={16} />, border: '#f59e0b' },
+    { label: 'Active Positions', val: portfolio.positions.length, color: 'var(--color-dutch-white)', icon: <TrendingUp size={16} />, border: 'var(--color-dutch-white)' },
+    { label: 'Total Trades', val: totalTrades, color: 'var(--color-asparagus)', icon: <BarChart2 size={16} />, border: 'var(--color-asparagus)' },
   ];
 
   return (
@@ -318,8 +318,8 @@ export default function DashboardTab({ portfolio, watchlist = [] }) {
                     fontWeight: 700,
                     fontFamily: 'var(--font-header)',
                     cursor: 'pointer',
-                    background: pnlPeriod === p ? 'rgba(0,230,118,0.15)' : 'rgba(255,255,255,0.04)',
-                    color: pnlPeriod === p ? 'var(--color-jade)' : 'var(--color-text-muted)',
+                    background: pnlPeriod === p ? 'rgba(128, 174, 232, 0.2)' : 'rgba(255,255,255,0.04)',
+                    color: pnlPeriod === p ? 'var(--palette-cool-horizon)' : 'var(--color-text-muted)',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     transition: 'all 0.15s ease',
@@ -336,12 +336,12 @@ export default function DashboardTab({ portfolio, watchlist = [] }) {
         {/* Win Rate Ring */}
         <div className="glassy-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px', padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', alignSelf: 'flex-start' }}>
-            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#a855f7' }} />
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-dutch-white)' }} />
             <span style={{ fontFamily: 'var(--font-header)', fontWeight: 800, fontSize: '0.95rem' }}>Win Rate</span>
           </div>
           <WinRateRing percent={winRate} size={150} />
           <div style={{ textAlign: 'center' }}>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.4rem', fontWeight: 800, color: winRate >= 60 ? 'var(--color-jade)' : winRate >= 40 ? '#f59e0b' : 'var(--color-red)' }}>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '1.4rem', fontWeight: 800, color: winRate >= 60 ? 'var(--color-jade)' : winRate >= 40 ? 'var(--color-dutch-white)' : 'var(--color-red)' }}>
               {filledSells.length}/{totalFilled.length}
             </p>
             <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>Winning Trades</p>
@@ -366,9 +366,9 @@ export default function DashboardTab({ portfolio, watchlist = [] }) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {gainers.map((g, i) => (
-                <div key={g.symbol} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(0,230,118,0.04)', borderRadius: '10px', border: '1px solid rgba(0,230,118,0.1)' }}>
+                <div key={g.symbol} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(46, 75, 47, 0.16)', borderRadius: '10px', border: '1px solid rgba(52, 199, 89, 0.25)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem', color: '#fff' }}>{g.symbol}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>{g.symbol}</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{g.shares} shares</span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -396,9 +396,9 @@ export default function DashboardTab({ portfolio, watchlist = [] }) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {losers.filter(l => l.pct < 0).map((l, i) => (
-                <div key={l.symbol} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(239,68,68,0.04)', borderRadius: '10px', border: '1px solid rgba(239,68,68,0.12)' }}>
+                <div key={l.symbol} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: 'rgba(219, 62, 62, 0.08)', borderRadius: '10px', border: '1px solid rgba(219, 62, 62, 0.2)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem', color: '#fff' }}>{l.symbol}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '0.9rem', color: 'var(--color-text-primary)' }}>{l.symbol}</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)' }}>{l.shares} shares</span>
                   </div>
                   <div style={{ textAlign: 'right' }}>
@@ -450,7 +450,7 @@ export default function DashboardTab({ portfolio, watchlist = [] }) {
                         borderRadius: '4px',
                         fontSize: '0.68rem',
                         fontWeight: 700,
-                        background: order.status === 'FILLED' ? 'rgba(0,230,118,0.1)' : 'rgba(239,68,68,0.1)',
+                        background: order.status === 'FILLED' ? 'rgba(46, 75, 47, 0.25)' : 'rgba(91, 0, 21, 0.25)',
                         color: order.status === 'FILLED' ? 'var(--color-jade)' : 'var(--color-red)',
                         letterSpacing: '0.3px',
                       }}>

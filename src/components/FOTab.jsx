@@ -46,9 +46,9 @@ function GreeksDisplay({ greeks }) {
   const greekItems = [
     { key: 'delta', label: 'Δ Delta', desc: 'Price sensitivity', color: 'var(--color-teal)' },
     { key: 'gamma', label: 'Γ Gamma', desc: 'Delta rate of change', color: 'var(--color-jade)' },
-    { key: 'theta', label: 'Θ Theta', desc: 'Time decay (per day)', color: 'var(--color-rose, #ff4d4d)' },
-    { key: 'vega', label: 'ν Vega', desc: 'Volatility sensitivity', color: '#a78bfa' },
-    { key: 'rho', label: 'ρ Rho', desc: 'Interest rate effect', color: '#fb923c' },
+    { key: 'theta', label: 'Θ Theta', desc: 'Time decay (per day)', color: 'var(--color-dutch-white)' },
+    { key: 'vega', label: 'ν Vega', desc: 'Volatility sensitivity', color: 'var(--color-asparagus)' },
+    { key: 'rho', label: 'ρ Rho', desc: 'Interest rate effect', color: 'var(--color-mint)' },
   ];
 
   return (
@@ -151,7 +151,7 @@ export default function FOTab({ kycCompleted, setKycCompleted, watchlist, portfo
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
         <div className="glassy-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', maxWidth: '480px', textAlign: 'center', padding: '40px' }}>
-          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(255, 77, 77, 0.1)', color: '#ff4d4d', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', backgroundColor: 'rgba(229, 220, 183, 0.12)', color: 'var(--color-dutch-white)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ShieldAlert size={36} />
           </div>
           <div>

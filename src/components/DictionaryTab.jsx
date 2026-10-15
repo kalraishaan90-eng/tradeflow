@@ -531,14 +531,14 @@ export default function DictionaryTab() {
                     </span>
                     <span style={{
                       fontSize: '0.7rem',
-                      color: item.difficulty === 'Beginner' ? 'var(--color-jade)' : item.difficulty === 'Intermediate' ? '#f59e0b' : 'var(--color-rose)',
+                      color: item.difficulty === 'Beginner' ? 'var(--color-jade)' : item.difficulty === 'Intermediate' ? 'var(--color-dutch-white)' : 'var(--color-mint)',
                       fontWeight: 600
                     }}>
                       {item.difficulty}
                     </span>
                   </div>
 
-                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', color: '#fff', marginBottom: '8px' }}>
+                  <h4 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.15rem', color: 'var(--color-text-primary)', marginBottom: '8px' }}>
                     {item.term}
                   </h4>
 
@@ -633,14 +633,14 @@ export default function DictionaryTab() {
               </span>
               <span style={{
                 fontSize: '0.75rem',
-                color: activeTerm.difficulty === 'Beginner' ? 'var(--color-jade)' : activeTerm.difficulty === 'Intermediate' ? '#f59e0b' : 'var(--color-rose)',
+                color: activeTerm.difficulty === 'Beginner' ? 'var(--color-jade)' : activeTerm.difficulty === 'Intermediate' ? 'var(--color-dutch-white)' : 'var(--color-mint)',
                 fontWeight: 600
               }}>
                 {activeTerm.difficulty}
               </span>
             </div>
 
-            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', color: '#fff', margin: '4px 0 16px' }}>
+            <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.8rem', color: 'var(--color-text-primary)', margin: '4px 0 16px' }}>
               {activeTerm.term}
             </h2>
 

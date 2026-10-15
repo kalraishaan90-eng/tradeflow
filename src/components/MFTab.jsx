@@ -112,7 +112,7 @@ export const REAL_MUTUAL_FUNDS = [
     minLumpsum: 2500,
     desc: 'Premier small-cap fund with proven track record of spotting emerging multibaggers in industrial engineering, chemicals, and consumption.',
     tags: ['Multibagger Alpha', 'High Growth', 'Deep Diversification'],
-    color: '#f87171',
+    color: 'var(--color-dutch-white)',
     sigma: 0.22,
     staffPick: false,
     benchmark: 'NIFTY Smallcap 250 TRI',
@@ -217,9 +217,9 @@ export const REAL_MUTUAL_FUNDS = [
 ];
 
 const RISK_META = {
-  Low: { label: 'Low Risk', icon: Shield, color: '#34d399', bg: 'rgba(52,211,153,0.12)' },
-  Moderate: { label: 'Moderate', icon: Target, color: 'var(--color-teal)', bg: 'rgba(13,242,201,0.1)' },
-  High: { label: 'High Risk', icon: Zap, color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+  Low: { label: 'Low Risk', icon: Shield, color: 'var(--color-bullish)', bg: 'rgba(46, 75, 47, 0.25)' },
+  Moderate: { label: 'Moderate', icon: Target, color: 'var(--palette-cool-horizon)', bg: 'rgba(128, 174, 232, 0.15)' },
+  High: { label: 'High Growth', icon: Zap, color: 'var(--palette-champagne-silk)', bg: 'rgba(243, 236, 224, 0.15)' },
 };
 
 function RiskMeter({ score }) {
@@ -229,7 +229,7 @@ function RiskMeter({ score }) {
         <div
           key={i}
           className={`risk-pip ${i <= score ? 'active' : ''}`}
-          style={{ backgroundColor: i <= score ? (score >= 4 ? '#f87171' : score >= 3 ? 'var(--color-teal)' : '#34d399') : undefined }}
+          style={{ backgroundColor: i <= score ? (score >= 4 ? 'var(--color-dutch-white)' : score >= 3 ? 'var(--color-asparagus)' : 'var(--color-mint)') : undefined }}
         />
       ))}
     </div>
@@ -644,7 +644,7 @@ export default function MFTab({ portfolio, executeTrade }) {
             </button>
 
             {investAmount > portfolio.balance && (
-              <p style={{ fontSize: '11px', color: '#f87171', textAlign: 'center', marginTop: '8px' }}>
+              <p style={{ fontSize: '11px', color: 'var(--color-poppy)', textAlign: 'center', marginTop: '8px' }}>
                 Insufficient virtual cash. Need {fmt(investAmount - portfolio.balance)} more.
               </p>
             )}

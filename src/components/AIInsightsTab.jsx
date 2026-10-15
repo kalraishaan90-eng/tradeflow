@@ -98,7 +98,7 @@ function SentimentGauge({ value, size = 180 }) {
   const circ = Math.PI * R;
   const drawn = circ * (value / 100) * progress;
 
-  const color = value <= 25 ? '#FF4D4D' : value <= 45 ? '#f59e0b' : value <= 55 ? '#9ca3af' : value <= 75 ? '#5DD394' : '#59D4B2';
+  const color = value <= 25 ? 'var(--color-falu-red)' : value <= 45 ? 'var(--color-poppy)' : value <= 55 ? 'var(--color-dutch-white)' : value <= 75 ? 'var(--color-asparagus)' : 'var(--color-mint)';
   const label = value <= 25 ? 'EXTREME FEAR' : value <= 45 ? 'FEAR' : value <= 55 ? 'NEUTRAL' : value <= 75 ? 'GREED' : 'EXTREME GREED';
 
   return (
@@ -106,10 +106,11 @@ function SentimentGauge({ value, size = 180 }) {
       <svg width={size} height={size * 0.8} style={{ overflow: 'visible' }}>
         <defs>
           <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#FF4D4D" />
-            <stop offset="35%" stopColor="#f59e0b" />
-            <stop offset="65%" stopColor="#5DD394" />
-            <stop offset="100%" stopColor="#59D4B2" />
+            <stop offset="0%" stopColor="#5B0015" />
+            <stop offset="25%" stopColor="#FF453A" />
+            <stop offset="50%" stopColor="#F3ECE0" />
+            <stop offset="75%" stopColor="#80AEE8" />
+            <stop offset="100%" stopColor="#2E4B2F" />
           </linearGradient>
         </defs>
         <path
@@ -403,9 +404,9 @@ export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAsse
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
-                        background: isActive ? 'rgba(13, 242, 201, 0.12)' : 'transparent',
-                        color: isActive ? '#fff' : 'var(--color-text-secondary)',
-                        borderLeft: isActive ? '3px solid var(--color-teal)' : '3px solid transparent',
+                        background: isActive ? 'rgba(128, 174, 232, 0.16)' : 'transparent',
+                        color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                        borderLeft: isActive ? '3px solid var(--color-asparagus)' : '3px solid transparent',
                         fontSize: '0.8rem',
                         transition: 'background 0.15s'
                       }}
@@ -413,7 +414,7 @@ export default function AIInsightsTab({ watchlist, setActiveTab, setSelectedAsse
                       onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                        <MessageSquare size={13} style={{ flexShrink: 0, color: isActive ? 'var(--color-teal)' : 'var(--color-text-muted)' }} />
+                        <MessageSquare size={13} style={{ flexShrink: 0, color: isActive ? 'var(--color-asparagus)' : 'var(--color-text-muted)' }} />
                         <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {s.title}
                         </span>

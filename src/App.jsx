@@ -18,7 +18,9 @@ import {
   Settings,
   ShieldAlert,
   Trophy,
-  Crown
+  Crown,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 import { doc, getDoc, setDoc } from 'firebase/firestore';
@@ -146,6 +148,18 @@ function App() {
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [timeStr, setTimeStr] = useState('');
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('tradeflow_theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('tradeflow_theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
 
   const watchlistRef = useRef(watchlist);
   watchlistRef.current = watchlist;
@@ -829,7 +843,7 @@ function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <TrendingUp className="logo-icon" style={{ fontSize: '20px', width: '24px', height: '24px' }} />
               <h1 className="greeting-text">TradeFlow</h1>
-              <span className="badge-interactive" style={{ backgroundColor: 'rgba(93, 211, 148, 0.08)', color: 'var(--color-jade)' }}>
+              <span className="badge-interactive" style={{ backgroundColor: 'rgba(128, 174, 232, 0.14)', color: 'var(--palette-cool-horizon)', border: '1px solid rgba(128, 174, 232, 0.25)', borderRadius: '9999px', padding: '2px 10px' }}>
                 Practice Mode
               </span>
             </div>
@@ -852,9 +866,9 @@ function App() {
                 borderRadius: '9999px',
                 fontSize: '12px',
                 fontWeight: 600,
-                border: userPlan === 'free' ? '1px solid rgba(245, 158, 11, 0.5)' : '1px solid rgba(56, 189, 248, 0.6)',
-                background: userPlan === 'free' ? 'rgba(245, 158, 11, 0.12)' : 'rgba(56, 189, 248, 0.15)',
-                color: userPlan === 'free' ? '#fbbf24' : '#38bdf8',
+                border: userPlan === 'free' ? '1px solid var(--color-border)' : '1px solid rgba(128, 174, 232, 0.4)',
+                background: userPlan === 'free' ? 'var(--color-surface)' : 'rgba(128, 174, 232, 0.16)',
+                color: userPlan === 'free' ? 'var(--color-text-primary)' : 'var(--palette-cool-horizon)',
                 cursor: 'pointer'
               }}
               title="View Subscription Plans"
@@ -918,6 +932,17 @@ function App() {
                 }}></span>
               )}
             </button>
+
+            {/* Theme Switcher Toggle (White/Light vs Dark) */}
+            <button 
+              className="trade-btn secondary-btn hover-glow" 
+              style={{ padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              aria-label={`Switch to ${theme === 'light' ? 'Dark' : 'White (Light)'} Mode`}
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'White (Light)'} Mode`}
+              onClick={toggleTheme}
+            >
+              {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
           </div>
         </header>
 
@@ -975,6 +1000,8 @@ function App() {
               userDisplayName={displayName}
               userPlan={userPlan}
               onOpenUpgradeModal={() => setIsUpgradeModalOpen(true)}
+              theme={theme}
+              toggleTheme={toggleTheme}
             />
           )}
 

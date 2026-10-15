@@ -48,7 +48,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-const PORT = 4173;
+const PORT = 5088;
 server.listen(PORT, '127.0.0.1', async () => {
   console.log(`Server listening on http://127.0.0.1:${PORT}`);
 
@@ -79,7 +79,7 @@ server.listen(PORT, '127.0.0.1', async () => {
     { name: 'Home', file: '01_home_tab.png' },
     { name: 'Market', file: '02_market_tab.png', setup: async () => {
       // Click first stock row to expand chart and trade station
-      const row = await page.$('.asset-row');
+      const row = (await page.$('.market-row')) || (await page.$('.asset-row'));
       if (row) await row.click();
       await new Promise(r => setTimeout(r, 1200));
     }},

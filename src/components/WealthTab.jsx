@@ -354,13 +354,13 @@ export default function WealthTab() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--color-text-secondary)', marginBottom: '4px' }}>
                 <span>Credit Card Balance (₹)</span>
-                <span style={{ color: 'var(--color-rose)' }}>{creditCardApr}% APR</span>
+                <span style={{ color: 'var(--color-dutch-white)', fontWeight: 600 }}>{creditCardApr}% APR</span>
               </div>
               <input 
                 type="number"
                 value={creditCardBalance}
                 onChange={e => setCreditCardBalance(e.target.value)}
-                style={{ width: '100%', background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: '#fff', padding: '8px 12px', borderRadius: '6px', fontFamily: 'var(--font-mono)' }}
+                style={{ width: '100%', background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text-primary)', padding: '8px 12px', borderRadius: '6px', fontFamily: 'var(--font-mono)' }}
               />
             </div>
 

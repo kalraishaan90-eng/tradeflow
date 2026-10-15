@@ -676,7 +676,7 @@ export default function BankingRatesTab() {
                 <label style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
                   ANNUAL INTEREST RATE (%)
                 </label>
-                <span style={{ color: 'var(--color-rose)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                <span style={{ color: 'var(--color-dutch-white)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                   {loanRate}%
                 </span>
               </div>
@@ -687,7 +687,7 @@ export default function BankingRatesTab() {
                 step="0.1"
                 value={loanRate}
                 onChange={e => setLoanRate(Number(e.target.value))}
-                style={{ width: '100%', accentColor: 'var(--color-rose)' }}
+                style={{ width: '100%', accentColor: 'var(--color-dutch-white)' }}
               />
             </div>
 
@@ -697,7 +697,7 @@ export default function BankingRatesTab() {
                 <label style={{ fontSize: '0.8rem', color: 'var(--color-text-secondary)' }}>
                   TENURE (YEARS)
                 </label>
-                <span style={{ color: '#fff', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                <span style={{ color: 'var(--color-text-primary)', fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                   {loanTenureYears} Years
                 </span>
               </div>
@@ -726,14 +726,14 @@ export default function BankingRatesTab() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
                 <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>TOTAL INTEREST PAYABLE</span>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-rose)', marginTop: '4px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-dutch-white)', marginTop: '4px' }}>
                     ₹{loanCalculations.totalInterest.toLocaleString('en-IN')}
                   </div>
                 </div>
 
                 <div style={{ background: 'rgba(0,0,0,0.3)', padding: '16px', borderRadius: '10px' }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>TOTAL PAYMENT (P + I)</span>
-                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.4rem', fontWeight: 700, color: '#fff', marginTop: '4px' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: '1.4rem', fontWeight: 700, color: 'var(--color-text-primary)', marginTop: '4px' }}>
                     ₹{loanCalculations.totalPayment.toLocaleString('en-IN')}
                   </div>
                 </div>
@@ -743,11 +743,11 @@ export default function BankingRatesTab() {
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: '6px' }}>
                   <span style={{ color: 'var(--color-jade)' }}>Principal: {100 - loanCalculations.interestRatio}%</span>
-                  <span style={{ color: 'var(--color-rose)' }}>Interest: {loanCalculations.interestRatio}%</span>
+                  <span style={{ color: 'var(--color-dutch-white)' }}>Interest: {loanCalculations.interestRatio}%</span>
                 </div>
                 <div style={{ width: '100%', height: '10px', background: 'rgba(255,255,255,0.06)', borderRadius: '5px', overflow: 'hidden', display: 'flex' }}>
                   <div style={{ width: `${100 - loanCalculations.interestRatio}%`, background: 'var(--color-jade)' }} />
-                  <div style={{ width: `${loanCalculations.interestRatio}%`, background: 'var(--color-rose)' }} />
+                  <div style={{ width: `${loanCalculations.interestRatio}%`, background: 'var(--color-dutch-white)' }} />
                 </div>
               </div>
             </div>

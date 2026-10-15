@@ -25,7 +25,9 @@ export default function SettingsTab({
   portfolio,
   userDisplayName,
   userPlan = 'free',
-  onOpenUpgradeModal
+  onOpenUpgradeModal,
+  theme,
+  toggleTheme: parentToggleTheme
 }) {
   const [kycStep, setKycStep] = useState(kycCompleted ? 4 : 1);
   const [fullName, setFullName] = useState(userDisplayName || '');
@@ -35,7 +37,7 @@ export default function SettingsTab({
   const [kycError, setKycError] = useState('');
   
   const [showAmounts, setShowAmounts] = useState(false);
-  const [isLightMode, setIsLightMode] = useState(false);
+  const isLightMode = theme ? theme === 'light' : (typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') !== 'dark');
 
   useEffect(() => {
     if (userDisplayName && !fullName) {
@@ -49,14 +51,14 @@ export default function SettingsTab({
     }
   }, [kycCompleted]);
 
-  useEffect(() => {
-    setIsLightMode(document.documentElement.getAttribute('data-theme') === 'light');
-  }, []);
-
   const toggleTheme = () => {
-    const newTheme = !isLightMode ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', newTheme);
-    setIsLightMode(!isLightMode);
+    if (parentToggleTheme) {
+      parentToggleTheme();
+    } else {
+      const newTheme = isLightMode ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('tradeflow_theme', newTheme);
+    }
   };
 
   // Calculate some stats
@@ -310,7 +312,7 @@ export default function SettingsTab({
 
           {/* Inline Error Banner */}
           {kycError && (
-            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(255, 77, 77, 0.1)', border: '1px solid rgba(255, 77, 77, 0.3)', color: '#f87171', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ padding: '10px 14px', borderRadius: '8px', background: 'rgba(219, 62, 62, 0.1)', border: '1px solid rgba(219, 62, 62, 0.3)', color: 'var(--color-poppy)', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <AlertCircle size={16} />
               <span>{kycError}</span>
             </div>
